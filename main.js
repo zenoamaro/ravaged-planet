@@ -1,6 +1,6 @@
 import {key} from './input.js';
-import {createTerrain, clipTerrain, isTerrain} from './terrain.js';
-import {createCanvas, drawCircle, drawLine, plot, drawParagraph, loop, drawText} from './gfx.js';
+import {createTerrain, clipTerrain, isTerrain, landHeight} from './terrain.js';
+import {createCanvas, drawCircle, drawLine, plot, drawParagraph, loop, drawText, drawRect} from './gfx.js';
 import {wrap, clamp, parable, deg2rad, vec} from './math.js';
 import {drawExplosion, WEAPONS} from './weapons.js';
 
@@ -24,8 +24,8 @@ const terrain = createTerrain(W, H);
 const projectiles = createCanvas(W, H);
 
 // Init players
-players.push({x:100, y:H-80, a:0, p:100, c:'red', weapon:WEAPONS[0]});
-players.push({x:220, y:H-80, a:0, p:100, c:'blue', weapon:WEAPONS[1]});
+players.push({x:100, y:landHeight(terrain, 100), a:0, p:100, c:'red', weapon:WEAPONS[0]});
+players.push({x:220, y:landHeight(terrain, 220), a:0, p:100, c:'blue', weapon:WEAPONS[1]});
 
 function update() {
   if (state === 'aim') {
@@ -43,7 +43,7 @@ function update() {
     } else if (key(' ')) {
       state = 'fire';
       fadeProjectiles();
-      const [px, py] = vec(x, y, a+180, 10);
+      const [px, py] = vec(x, y-3, a+180, 3);
       projectile = {
         player: player,
         weapon: player.weapon,
@@ -78,13 +78,14 @@ function draw() {
   if (projectile) drawProjectile();
   fb.drawImage(projectiles.canvas, 0, 0);
   for (let tank of players) drawPlayer(tank);
+  drawStatus();
 }
 
 function drawPlayer(player) {
   const {x, y, a, c} = player;
-  const [px, py] = vec(x, y, a+180, 10);
-  drawLine(fb, x, y, Math.round(px), Math.round(py), c);
-  drawStatus();
+  const [px, py] = vec(x, y-3, a+180, 3);
+  drawLine(fb, x, y-3, Math.round(px), Math.round(py), c);
+  drawRect(fb, x-3, y-2, 6, 3, c);
 }
 
 function drawProjectile() {
