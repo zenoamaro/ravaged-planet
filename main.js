@@ -10,6 +10,7 @@ let state = 'aim';
 const players = [];
 let currentPlayer = 0;
 let projectile = null;
+let prevProjectile = null;
 
 // Init canvas
 const fb = createCanvas(W, H);
@@ -44,31 +45,44 @@ function update() {
       state = 'fire';
       fadeProjectiles();
       const [px, py] = vec(x, y-3, a+180, 3);
-      projectile = {
+      projectile = prevProjectile = {
         player: player,
         weapon: player.weapon,
         ox:px, oy:py, a, p,
-        x:0, y:0, t: 0,
+        x:px, y:py, t: 0,
       };
     }
   }
 
   else if (state === 'fire') {
-    for (let i=0; i<10; i++) {
+    prevProjectile = {...projectile};
+    for (let i=0; i<20; i++) {
       const {weapon, ox, oy, a, p, t} = projectile;
       const [x, y] = parable(t, ox, oy, deg2rad(180+a), p/10, 9.8);
       projectile.t += 0.01;
-      projectile.x = Math.round(x);
-      projectile.y = Math.round(y);
+      projectile.x = Math.ceil(x);
+      projectile.y = Math.floor(y);
 
       if (y > H || isTerrain(terrain, x, y)) {
         clipTerrain(terrain, (ctx) => drawExplosion(ctx, projectile.x, projectile.y, weapon.xr));
         currentPlayer = wrap(0, currentPlayer+1, players.length);
         projectile = null;
-        state = 'aim';
+        state = 'land';
         return;
       }
     }
+  }
+
+  else if (state === 'land') {
+    let stable = true;
+    for (let player of players) {
+      const y = landHeight(terrain, player.x);
+      if (player.y !== y) {
+        player.y++;
+        stable = false;
+      }
+    }
+    if (stable) state = 'aim';
   }
 }
 
@@ -90,7 +104,9 @@ function drawPlayer(player) {
 
 function drawProjectile() {
   const {x, y, player} = projectile;
-  plot(projectiles, x, y, player.c);
+  projectiles.globalAlpha = 0.5;
+  drawLine(projectiles, prevProjectile.x, prevProjectile.y, x, y, player.c);
+  projectiles.globalAlpha = 0.1;
 }
 
 function fadeProjectiles() {
