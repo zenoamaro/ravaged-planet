@@ -12,6 +12,7 @@ const players = [];
 let currentPlayer = 0;
 let projectile = null;
 let prevProjectile = null;
+let fadeCount = 0;
 
 // Init canvas
 const fb = createCanvas(W, H);
@@ -30,7 +31,7 @@ let i=0;
 for (let color of ['tomato', 'royalblue', 'greenyellow', 'gold', 'hotpink', 'orchid']) {
   const x = Math.round(50 + (W-100) / 5 * i);
   const a = x > W/2 ? 45 : 180-45;
-  players.push({x, y:landHeight(terrain, x), a, p:300, c:color, weapon:WEAPONS[i%2]});
+  players.push({x, y:landHeight(terrain, x), a, p:300, c:color, weapon:WEAPONS[i%WEAPONS.length]});
   i++;
 }
 
@@ -63,7 +64,10 @@ function update() {
 
   else if (state === 'fire') {
     prevProjectile = {...projectile};
-    fadeProjectiles(1);
+    if (fadeCount++ === 2) {
+      fadeProjectiles(1);
+      fadeCount = 0;
+    }
     for (let i=0; i<30; i++) {
       const {weapon, ox, oy, a, p, t} = projectile;
       const [x, y] = parable(t, ox, oy, deg2rad(180+a), p/10, 9.8);
