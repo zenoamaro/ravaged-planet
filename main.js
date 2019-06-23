@@ -5,7 +5,7 @@ import {wrap, clamp, parable, deg2rad, vec} from './math.js';
 import {drawExplosion, WEAPONS} from './weapons.js';
 import {createOsc, audio} from './sound.js';
 
-const W = 384; const H = 240; const Z = 3;
+const W = 640; const H = 400; const Z = 2;
 
 let state = 'aim';
 const players = [];
@@ -26,12 +26,13 @@ const terrain = createTerrain(W, H);
 const projectiles = createCanvas(W, H);
 
 // Init players
-players.push({x:50, y:landHeight(terrain, 50), a:180-45, p:300, c:'tomato', weapon:WEAPONS[0]});
-players.push({x:100, y:landHeight(terrain, 100), a:45, p:300, c:'royalblue', weapon:WEAPONS[1]});
-players.push({x:180, y:landHeight(terrain, 180), a:45, p:300, c:'greenyellow', weapon:WEAPONS[0]});
-players.push({x:260, y:landHeight(terrain, 260), a:45, p:300, c:'gold', weapon:WEAPONS[1]});
-players.push({x:290, y:landHeight(terrain, 290), a:45, p:300, c:'hotpink', weapon:WEAPONS[0]});
-players.push({x:340, y:landHeight(terrain, 340), a:45, p:300, c:'orchid', weapon:WEAPONS[1]});
+let i=0;
+for (let color of ['tomato', 'royalblue', 'greenyellow', 'gold', 'hotpink', 'orchid']) {
+  const x = Math.round(50 + (W-100) / 5 * i);
+  const a = x > W/2 ? 45 : 180-45;
+  players.push({x, y:landHeight(terrain, x), a, p:300, c:color, weapon:WEAPONS[i%2]});
+  i++;
+}
 
 function update() {
   if (state === 'aim') {
@@ -48,8 +49,7 @@ function update() {
       player.p = clamp(100, p -5, 1000);
     } else if (key(' ')) {
       state = 'fire';
-      fadeProjectiles();
-      const [px, py] = vec(x, y-3, a+180, 3);
+      const [px, py] = vec(x, y-3, a+180, 5);
       projectile = prevProjectile = {
         osc: createOsc(),
         player: player,
@@ -63,7 +63,8 @@ function update() {
 
   else if (state === 'fire') {
     prevProjectile = {...projectile};
-    for (let i=0; i<20; i++) {
+    fadeProjectiles(1);
+    for (let i=0; i<30; i++) {
       const {weapon, ox, oy, a, p, t} = projectile;
       const [x, y] = parable(t, ox, oy, deg2rad(180+a), p/10, 9.8);
       const f = 200 + 10 * (H-y);
@@ -117,9 +118,9 @@ function drawProjectile() {
   drawLine(projectiles, prevProjectile.x, prevProjectile.y, x, y, player.c);
 }
 
-function fadeProjectiles() {
+function fadeProjectiles(amount) {
   const imageData = projectiles.getImageData(0, 0, W, H);
-  for (let i=0; i<imageData.data.length; i+=4) imageData.data[i+3] -= 30;
+  for (let i=0; i<imageData.data.length; i+=4) imageData.data[i+3] -= amount;
   projectiles.clearRect(0, 0, W, H);
   projectiles.putImageData(imageData, 0, 0);
 }
