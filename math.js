@@ -27,9 +27,9 @@ export function wrap(min, x, max) {
   return ((x-min + max-min) % (max-min)) + min;
 }
 
-export function parable(t, x, y, a, v, g) {
-  const fx = x + t * v * Math.cos(a);
-  const fy = y + t * v * Math.sin(a) - 0.5 * -g * t*t;
+export function parable(t, x, y, a, v, w=0, g=9.8) {
+  const fx = x + t*v * Math.cos(a) - 0.5 * -w * t*t;
+  const fy = y + t*v * Math.sin(a) - 0.5 * -g * t*t;
   return [fx, fy];
 }
 

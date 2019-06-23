@@ -1,18 +1,19 @@
 import {key} from './input.js';
 import {createTerrain, clipTerrain, isTerrain, landHeight} from './terrain.js';
 import {createCanvas, drawLine, loop, drawText, drawRect} from './gfx.js';
-import {wrap, clamp, parable, deg2rad, vec} from './math.js';
+import {wrap, clamp, parable, deg2rad, vec, randomInt} from './math.js';
 import {drawExplosion, WEAPONS} from './weapons.js';
 import {createOsc, audio} from './sound.js';
 
 const W = 640; const H = 400; const Z = 2;
 
-let state = 'aim';
+let state = 'start-turn';
 const players = [];
 let currentPlayer = 0;
 let projectile = null;
 let prevProjectile = null;
 let fadeCount = 0;
+let wind = 0;
 
 // Init canvas
 const fb = createCanvas(W, H);
@@ -36,7 +37,12 @@ for (let color of ['tomato', 'royalblue', 'greenyellow', 'gold', 'hotpink', 'orc
 }
 
 function update() {
-  if (state === 'aim') {
+  if (state === 'start-turn') {
+    wind = randomInt(-25, +25);
+    state = 'aim';
+  }
+
+  else if (state === 'aim') {
     const player = players[currentPlayer];
     const {x, y, a, p} = player;
 
@@ -70,7 +76,7 @@ function update() {
     }
     for (let i=0; i<30; i++) {
       const {weapon, ox, oy, a, p, t} = projectile;
-      const [x, y] = parable(t, ox, oy, deg2rad(180+a), p/10, 9.8);
+      const [x, y] = parable(t, ox, oy, deg2rad(180+a), p/10, wind/10);
       const f = 200 + 10 * (H-y);
       projectile.t += 0.01;
       projectile.x = Math.ceil(x);
@@ -79,7 +85,6 @@ function update() {
 
       if (y > H || isTerrain(terrain, x, y)) {
         clipTerrain(terrain, (ctx) => drawExplosion(ctx, projectile.x, projectile.y, weapon.xr));
-        currentPlayer = wrap(0, currentPlayer+1, players.length);
         projectile.osc.stop();
         projectile = null;
         state = 'land';
@@ -97,7 +102,12 @@ function update() {
         stable = false;
       }
     }
-    if (stable) state = 'aim';
+    if (stable) state = 'end-turn';
+  }
+
+  else if (state === 'end-turn') {
+    currentPlayer = wrap(0, currentPlayer+1, players.length);
+    state = 'start-turn';
   }
 }
 
@@ -132,8 +142,8 @@ function fadeProjectiles(amount) {
 function drawStatus() {
   const player = players[currentPlayer];
   const {weapon} = player;
-  drawText(fb, `AIM=${player.a}  PWR=${player.p}`, 8, 8, player.c, 'left');
-  drawText(fb, `${weapon.name}`, W-8, 8, player.c, 'right');
+  drawText(fb, `AIM:${player.a}  PWR:${player.p}  ${weapon.name}`, 8, 8, player.c, 'left');
+  drawText(fb, `WIND: ${wind<=0?'<':''}${Math.abs(wind)}${wind>=0?'>':''}`, W-8, 8, 'white', 'right');
 }
 
 loop(() => {

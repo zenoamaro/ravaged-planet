@@ -10,7 +10,7 @@ export function createTerrain(width, height) {
 export function generateTerrain(ctx) {
   const {width, height} = ctx.canvas;
   for (let x=0; x<width; x++) {
-    const h = Math.round(80 + 8 * Math.sin(x/25));
+    const h = Math.round(80 + 30 * Math.sin(x/25));
     drawRect(ctx, x, height-h, 1, h, 'burlywood');
   }
 }
