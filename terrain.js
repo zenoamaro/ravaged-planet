@@ -10,8 +10,23 @@ export function createTerrain(width, height) {
 export function generateTerrain(ctx) {
   const {width, height} = ctx.canvas;
   for (let x=0; x<width; x++) {
-    const h = Math.round(80 + 30 * Math.sin(x/25));
+    const h = Math.round(120 + 30 * Math.sin(x/25));
     drawRect(ctx, x, height-h, 1, h, 'burlywood');
+  }
+}
+
+export function collapseTerrain(ctx) {
+  const {width, height} = ctx.canvas;
+  for (let x=0; x<width; x++) {
+    const imageData = ctx.getImageData(x, 0, 1, height);
+
+    let land = 0;
+    for (let y=0; y<height*4; y+=4) {
+      if (imageData.data[y+3] > 0) land++;
+    }
+
+    ctx.clearRect(x, 0, 1, height);
+    drawRect(ctx, x, height-land, 1, land, 'burlywood');
   }
 }
 

@@ -1,9 +1,10 @@
 import {key} from './input.js';
-import {createTerrain, clipTerrain, isTerrain, landHeight} from './terrain.js';
+import {createTerrain, clipTerrain, isTerrain, landHeight, collapseTerrain} from './terrain.js';
 import {createCanvas, drawLine, loop, drawText, drawRect} from './gfx.js';
 import {wrap, clamp, parable, deg2rad, vec, randomInt} from './math.js';
 import {drawExplosion, WEAPONS} from './weapons.js';
 import {createOsc, audio} from './sound.js';
+import {createSky} from './sky.js';
 
 const W = 640; const H = 400; const Z = 2;
 
@@ -21,10 +22,9 @@ fb.canvas.style.width = `${W * Z}px`;
 fb.canvas.style.height = `${H * Z}px`;
 document.body.appendChild(fb.canvas);
 
-// Init terrain
+// Init aux canvases
+const sky = createSky(W, H);
 const terrain = createTerrain(W, H);
-
-// Init projectiles
 const projectiles = createCanvas(W, H);
 
 // Init players
@@ -70,7 +70,7 @@ function update() {
 
   else if (state === 'fire') {
     prevProjectile = {...projectile};
-    if (fadeCount++ === 2) {
+    if (fadeCount++ === 1) {
       fadeProjectiles(1);
       fadeCount = 0;
     }
@@ -87,13 +87,18 @@ function update() {
         clipTerrain(terrain, (ctx) => drawExplosion(ctx, projectile.x, projectile.y, weapon.xr));
         projectile.osc.stop();
         projectile = null;
-        state = 'land';
+        state = 'collapse-land';
         return;
       }
     }
   }
 
-  else if (state === 'land') {
+  else if (state === 'collapse-land') {
+    collapseTerrain(terrain);
+    state = 'land-players';
+  }
+
+  else if (state === 'land-players') {
     let stable = true;
     for (let player of players) {
       const y = landHeight(terrain, player.x);
@@ -113,6 +118,7 @@ function update() {
 
 function draw() {
   fb.clearRect(0, 0, W, H);
+  fb.drawImage(sky.canvas, 0, 0);
   fb.drawImage(terrain.canvas, 0, 0);
   if (projectile) drawProjectile();
   fb.drawImage(projectiles.canvas, 0, 0);
