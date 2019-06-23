@@ -1,8 +1,9 @@
 import {key} from './input.js';
 import {createTerrain, clipTerrain, isTerrain, landHeight} from './terrain.js';
-import {createCanvas, drawCircle, drawLine, plot, drawParagraph, loop, drawText, drawRect} from './gfx.js';
+import {createCanvas, drawLine, loop, drawText, drawRect} from './gfx.js';
 import {wrap, clamp, parable, deg2rad, vec} from './math.js';
 import {drawExplosion, WEAPONS} from './weapons.js';
+import {createOsc, audio} from './sound.js';
 
 const W = 384; const H = 240; const Z = 3;
 
@@ -25,8 +26,12 @@ const terrain = createTerrain(W, H);
 const projectiles = createCanvas(W, H);
 
 // Init players
-players.push({x:100, y:landHeight(terrain, 100), a:0, p:100, c:'red', weapon:WEAPONS[0]});
-players.push({x:220, y:landHeight(terrain, 220), a:0, p:100, c:'blue', weapon:WEAPONS[1]});
+players.push({x:50, y:landHeight(terrain, 50), a:180-45, p:300, c:'tomato', weapon:WEAPONS[0]});
+players.push({x:100, y:landHeight(terrain, 100), a:45, p:300, c:'royalblue', weapon:WEAPONS[1]});
+players.push({x:180, y:landHeight(terrain, 180), a:45, p:300, c:'greenyellow', weapon:WEAPONS[0]});
+players.push({x:260, y:landHeight(terrain, 260), a:45, p:300, c:'gold', weapon:WEAPONS[1]});
+players.push({x:290, y:landHeight(terrain, 290), a:45, p:300, c:'hotpink', weapon:WEAPONS[0]});
+players.push({x:340, y:landHeight(terrain, 340), a:45, p:300, c:'orchid', weapon:WEAPONS[1]});
 
 function update() {
   if (state === 'aim') {
@@ -46,11 +51,13 @@ function update() {
       fadeProjectiles();
       const [px, py] = vec(x, y-3, a+180, 3);
       projectile = prevProjectile = {
+        osc: createOsc(),
         player: player,
         weapon: player.weapon,
         ox:px, oy:py, a, p,
         x:px, y:py, t: 0,
       };
+      projectile.osc.start();
     }
   }
 
@@ -59,13 +66,16 @@ function update() {
     for (let i=0; i<20; i++) {
       const {weapon, ox, oy, a, p, t} = projectile;
       const [x, y] = parable(t, ox, oy, deg2rad(180+a), p/10, 9.8);
+      const f = 200 + 10 * (H-y);
       projectile.t += 0.01;
       projectile.x = Math.ceil(x);
       projectile.y = Math.floor(y);
+      projectile.osc.frequency.setValueAtTime(f, audio.currentTime);
 
       if (y > H || isTerrain(terrain, x, y)) {
         clipTerrain(terrain, (ctx) => drawExplosion(ctx, projectile.x, projectile.y, weapon.xr));
         currentPlayer = wrap(0, currentPlayer+1, players.length);
+        projectile.osc.stop();
         projectile = null;
         state = 'land';
         return;
@@ -104,14 +114,12 @@ function drawPlayer(player) {
 
 function drawProjectile() {
   const {x, y, player} = projectile;
-  projectiles.globalAlpha = 0.5;
   drawLine(projectiles, prevProjectile.x, prevProjectile.y, x, y, player.c);
-  projectiles.globalAlpha = 0.1;
 }
 
 function fadeProjectiles() {
   const imageData = projectiles.getImageData(0, 0, W, H);
-  for (let i=0; i<imageData.data.length; i+=4) imageData.data[i+3] -= 25;
+  for (let i=0; i<imageData.data.length; i+=4) imageData.data[i+3] -= 30;
   projectiles.clearRect(0, 0, W, H);
   projectiles.putImageData(imageData, 0, 0);
 }
