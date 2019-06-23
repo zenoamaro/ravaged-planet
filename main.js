@@ -1,12 +1,12 @@
+import {H, MAX_BULLET_SOUND_FREQUENCY, MAX_WIND, MIN_BULLET_SOUND_FREQUENCY, PLAYER_COLORS, PLAYER_INITIAL_POWER, REDUCTION_FACTOR, W, WEAPON_TYPES, Z, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS} from './constants.js';
+import {createCanvas, drawLine, drawRect, drawText, loop} from './gfx.js';
 import {key} from './input.js';
-import {createTerrain, clipTerrain, isTerrain, landHeight, collapseTerrain} from './terrain.js';
-import {createCanvas, drawLine, loop, drawText, drawRect} from './gfx.js';
-import {wrap, clamp, parable, deg2rad, vec, randomInt} from './math.js';
-import {drawExplosion, WEAPONS} from './weapons.js';
-import {createOsc, audio} from './sound.js';
+import {clamp, deg2rad, parable, randomInt, vec, wrap} from './math.js';
 import {createSky} from './sky.js';
+import {audio, createOsc} from './sound.js';
+import {clipTerrain, collapseTerrain, createTerrain, isTerrain, landHeight} from './terrain.js';
+import {drawExplosion} from './weapons.js';
 
-const W = 640; const H = 400; const Z = 2;
 
 let state = 'start-turn';
 const players = [];
@@ -29,16 +29,16 @@ const projectiles = createCanvas(W, H);
 
 // Init players
 let i=0;
-for (let color of ['tomato', 'royalblue', 'greenyellow', 'gold', 'hotpink', 'orchid']) {
+for (let color of PLAYER_COLORS) {
   const x = Math.round(50 + (W-100) / 5 * i);
   const a = x > W/2 ? 45 : 180-45;
-  players.push({x, y:landHeight(terrain, x), a, p:300, c:color, weapon:WEAPONS[i%WEAPONS.length]});
+  players.push({x, y:landHeight(terrain, x), a, p:PLAYER_INITIAL_POWER, c:color, weapon:WEAPON_TYPES[i%WEAPON_TYPES.length]});
   i++;
 }
 
 function update() {
   if (state === 'start-turn') {
-    wind = randomInt(-25, +25);
+    wind = randomInt(-MAX_WIND, +MAX_WIND);
     state = 'aim';
   }
 
@@ -74,11 +74,11 @@ function update() {
       fadeProjectiles(1);
       fadeCount = 0;
     }
-    for (let i=0; i<30; i++) {
+    for (let i=0; i<PROJECTILE_ITERATIONS_PER_FRAME; i++) {
       const {weapon, ox, oy, a, p, t} = projectile;
-      const [x, y] = parable(t, ox, oy, deg2rad(180+a), p/10, wind/10);
-      const f = 200 + 10 * (H-y);
-      projectile.t += 0.01;
+      const [x, y] = parable(t, ox, oy, deg2rad(180+a), p/REDUCTION_FACTOR, wind/REDUCTION_FACTOR);
+      const f = (1-(1/H*y)) * (MAX_BULLET_SOUND_FREQUENCY-MIN_BULLET_SOUND_FREQUENCY) + MIN_BULLET_SOUND_FREQUENCY;
+      projectile.t += PROJECTILE_ITERATION_PROGRESS;
       projectile.x = Math.ceil(x);
       projectile.y = Math.floor(y);
       projectile.osc.frequency.setValueAtTime(f, audio.currentTime);
