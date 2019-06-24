@@ -13,6 +13,7 @@ const players = [];
 let currentPlayer = 0;
 let projectile = null;
 let prevProjectile = null;
+let explosion = null;
 let fadeCount = 0;
 let wind = 0;
 
@@ -85,11 +86,23 @@ function update() {
       projectile.osc.frequency.setValueAtTime(f, audio.currentTime);
 
       if (y > H || isTerrain(terrain, x, y)) {
-        clipTerrain(terrain, (ctx) => drawExplosion(ctx, projectile.x, projectile.y, weapon.xr));
         projectile.osc.stop();
-        state = 'land-collapse';
+        explosion = {
+          x: projectile.x,
+          y: projectile.y,
+          r: weapon.xr,
+          cr: 0,
+        }
+        state = 'explosion';
         return;
       }
+    }
+  }
+
+  else if (state === 'explosion') {
+    if (explosion.cr++ >= explosion.r) {
+      explosion = null;
+      state = 'land-collapse';
     }
   }
 
@@ -121,6 +134,7 @@ function draw() {
   foreground.clearRect(0, 0, W, H);
   if (projectile) drawProjectile();
   for (let tank of players) drawPlayer(tank);
+  if (explosion) performExplosions();
   drawStatus();
 }
 
@@ -141,6 +155,12 @@ function fadeProjectiles(amount) {
   for (let i=0; i<imageData.data.length; i+=4) imageData.data[i+3] -= amount;
   projectiles.clearRect(0, 0, W, H);
   projectiles.putImageData(imageData, 0, 0);
+}
+
+function performExplosions() {
+  const {x, y, cr} = explosion;
+  drawExplosion(foreground, x, y, cr);
+  clipTerrain(terrain, (ctx) => drawExplosion(ctx, x, y, cr));
 }
 
 function drawStatus() {
