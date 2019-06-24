@@ -16,16 +16,17 @@ let prevProjectile = null;
 let fadeCount = 0;
 let wind = 0;
 
-// Init canvas
-const fb = createCanvas(W, H);
-fb.canvas.style.width = `${W * Z}px`;
-fb.canvas.style.height = `${H * Z}px`;
-document.body.appendChild(fb.canvas);
-
-// Layers
+// Init layers
 const sky = createSky(W, H);
 const terrain = createTerrain(W, H);
 const projectiles = createCanvas(W, H);
+const foreground = createCanvas(W, H);
+
+for (let c of [sky, terrain, projectiles, foreground]) {
+  c.canvas.style.width = `${W * Z}px`;
+  c.canvas.style.height = `${H * Z}px`;
+  document.body.appendChild(c.canvas);
+}
 
 // Init players
 let i=0;
@@ -117,10 +118,8 @@ function update() {
 }
 
 function draw() {
-  fb.drawImage(sky.canvas, 0, 0);
-  fb.drawImage(terrain.canvas, 0, 0);
+  foreground.clearRect(0, 0, W, H);
   if (projectile) drawProjectile();
-  fb.drawImage(projectiles.canvas, 0, 0);
   for (let tank of players) drawPlayer(tank);
   drawStatus();
 }
@@ -128,8 +127,8 @@ function draw() {
 function drawPlayer(player) {
   const {x, y, a, c} = player;
   const [px, py] = vec(x, y-3, a+180, 3);
-  drawLine(fb, x, y-3, Math.round(px), Math.round(py), c);
-  drawRect(fb, x-3, y-2, 6, 3, c);
+  drawLine(foreground, x, y-3, Math.round(px), Math.round(py), c);
+  drawRect(foreground, x-3, y-2, 6, 3, c);
 }
 
 function drawProjectile() {
@@ -147,8 +146,8 @@ function fadeProjectiles(amount) {
 function drawStatus() {
   const player = players[currentPlayer];
   const {weapon} = player;
-  drawText(fb, `AIM:${player.a}  PWR:${player.p}  ${weapon.name}`, 8, 8, player.c, 'left');
-  drawText(fb, `WIND: ${wind<=0?'<':''}${Math.abs(wind)}${wind>=0?'>':''}`, W-8, 8, 'white', 'right');
+  drawText(foreground, `AIM:${player.a}  PWR:${player.p}  ${weapon.name}`, 8, 8, player.c, 'left');
+  drawText(foreground, `WIND: ${wind<=0?'<':''}${Math.abs(wind)}${wind>=0?'>':''}`, W-8, 8, 'white', 'right');
 }
 
 loop(() => {
