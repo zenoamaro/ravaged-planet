@@ -15,18 +15,21 @@ export function generateTerrain(ctx) {
   }
 }
 
-export function collapseTerrain(ctx) {
-  const {width, height} = ctx.canvas;
-  for (let x=0; x<width; x++) {
-    const imageData = ctx.getImageData(x, 0, 1, height);
+export function collapseTerrain(ctx, ox, r) {
+  const {height} = ctx.canvas;
+  const width = r * 2 + 10;
+  const left = ox-r-5;
+  const imageData = ctx.getImageData(left, 0, width, height);
 
+  for (let x=0; x<width; x++) {
     let land = 0;
-    for (let y=0; y<height*4; y+=4) {
-      if (imageData.data[y+3] > 0) land++;
+    for (let y=0; y<height; y++) {
+      const index = y*width*4 + x*4 +3;
+      if (imageData.data[index] > 0) land++;
     }
 
-    ctx.clearRect(x, 0, 1, height);
-    drawRect(ctx, x, height-land, 1, land, 'burlywood');
+    ctx.clearRect(left+x, 0, 1, height);
+    drawRect(ctx, left+x, height-land, 1, land, 'burlywood');
   }
 }
 

@@ -22,7 +22,7 @@ fb.canvas.style.width = `${W * Z}px`;
 fb.canvas.style.height = `${H * Z}px`;
 document.body.appendChild(fb.canvas);
 
-// Init aux canvases
+// Layers
 const sky = createSky(W, H);
 const terrain = createTerrain(W, H);
 const projectiles = createCanvas(W, H);
@@ -86,15 +86,15 @@ function update() {
       if (y > H || isTerrain(terrain, x, y)) {
         clipTerrain(terrain, (ctx) => drawExplosion(ctx, projectile.x, projectile.y, weapon.xr));
         projectile.osc.stop();
-        projectile = null;
-        state = 'collapse-land';
+        state = 'land-collapse';
         return;
       }
     }
   }
 
-  else if (state === 'collapse-land') {
-    collapseTerrain(terrain);
+  else if (state === 'land-collapse') {
+    collapseTerrain(terrain, projectile.x, projectile.weapon.xr);
+    projectile = null;
     state = 'land-players';
   }
 
@@ -117,7 +117,6 @@ function update() {
 }
 
 function draw() {
-  fb.clearRect(0, 0, W, H);
   fb.drawImage(sky.canvas, 0, 0);
   fb.drawImage(terrain.canvas, 0, 0);
   if (projectile) drawProjectile();
