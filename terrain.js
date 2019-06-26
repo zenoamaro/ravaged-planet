@@ -1,4 +1,12 @@
 import {createCanvas, drawRect, clipCanvas, plot} from './gfx.js';
+import {coords2index} from './math.js';
+
+let cachedImageData;
+
+function cacheImageData(ctx) {
+  const {width, height} = ctx.canvas;
+  cachedImageData = ctx.getImageData(0, 0, width, height);
+}
 
 export function createTerrain(width, height) {
   const terrain = createCanvas(width, height);
@@ -12,6 +20,7 @@ export function generateTerrain(ctx) {
     const h = Math.round(120 + 30 * Math.sin(x/25));
     drawRect(ctx, x, height-h, 1, h, 'burlywood');
   }
+  cacheImageData(ctx);
 }
 
 export function collapseTerrain(ctx, ox, r) {
@@ -30,30 +39,33 @@ export function collapseTerrain(ctx, ox, r) {
     ctx.clearRect(left+x, 0, 1, height);
     drawRect(ctx, left+x, height-land, 1, land, 'burlywood');
   }
+
+  cacheImageData(ctx);
 }
 
 export function isTerrain(ctx, x, y) {
-  const imageData = ctx.getImageData(x, y, 1, 1);
-  return imageData.data[3] > 0;
+  const index = coords2index(ctx.canvas.width, x, y) * 4;
+  return cachedImageData.data[index+3] > 0;
 }
 
 export function closestLand(ctx, x, y) {
-  const {height} = ctx.canvas;
-  const imageData = ctx.getImageData(x, 0, 1, height);
+  const {width, height} = ctx.canvas;
   for (let i=y; i<height; i++) {
-    if (imageData.data[i*4+3] !== 0) return i;
+    const index = coords2index(width, x, i) * 4;
+    if (cachedImageData.data[index+3] !== 0) return i;
   }
   return height-1;
 }
 
 export function landHeight(ctx, x) {
-  const {height} = ctx.canvas;
-  const imageData = ctx.getImageData(x, 0, 1, height);
-  for (let y=height-1; y>=0; y--) {
-    if (imageData.data[y*4+3] === 0) return y;
+  const {width, height} = ctx.canvas;
+  for (let i=height-1; i>=0; i--) {
+    const index = coords2index(width, x, i) * 4;
+    if (cachedImageData.data[index+3] === 0) return i;
   }
 }
 
 export function clipTerrain(ctx, fn) {
-  return clipCanvas(ctx, fn);
+  clipCanvas(ctx, fn);
+  cacheImageData(ctx);
 }

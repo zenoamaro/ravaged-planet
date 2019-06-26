@@ -4,8 +4,8 @@ import {key} from './input.js';
 import {clamp, deg2rad, parable, randomInt, vec, wrap} from './math.js';
 import {createSky} from './sky.js';
 import {audio, createOsc} from './sound.js';
-import {clipTerrain, collapseTerrain, createTerrain, isTerrain, landHeight, closestLand} from './terrain.js';
-import {drawExplosion, WEAPON_TYPES, EXPLOSION_TYPES} from './weapons.js';
+import {collapseTerrain, createTerrain, isTerrain, landHeight, closestLand} from './terrain.js';
+import {WEAPON_TYPES, EXPLOSION_TYPES} from './weapons.js';
 
 
 let state = 'start-turn';
@@ -14,13 +14,13 @@ let currentPlayer = 0;
 let projectile = null;
 let prevProjectile = null;
 let explosion = null;
-let fadeCount = 0;
 let wind = 0;
 
 // Init layers
 const sky = createSky(W, H);
 const terrain = createTerrain(W, H);
 const projectiles = createCanvas(W, H);
+const prevProjectiles = createCanvas(W, H);
 const foreground = createCanvas(W, H);
 
 for (let c of [sky, terrain, projectiles, foreground]) {
@@ -77,11 +77,7 @@ function update() {
 
   else if (state === 'fire') {
     prevProjectile = {...projectile};
-
-    if (fadeCount++ === 1) {
-      fadeProjectiles(1);
-      fadeCount = 0;
-    }
+    fadeProjectiles(5);
 
     for (let i=0; i<PROJECTILE_ITERATIONS_PER_FRAME; i++) {
       const {weapon, ox, oy, a, p, t} = projectile;
@@ -92,7 +88,7 @@ function update() {
       projectile.y = Math.floor(y);
       projectile.osc.frequency.setValueAtTime(f, audio.currentTime);
 
-      if (y > H || isTerrain(terrain, x, y)) {
+      if (y > H || isTerrain(terrain, projectile.x, projectile.y)) {
         projectile.osc.stop();
         const explosionSpec = weapon.explosion;
         const explosionType = EXPLOSION_TYPES[explosionSpec.type];
@@ -108,6 +104,7 @@ function update() {
     const explosionType = EXPLOSION_TYPES[weapon.explosion.type];
 
     if (!explosionType.update(explosion)) {
+      explosionType.clip(explosion, terrain);
       for (let player of players) {
         if (player.energy > 0) {
           player.energy -= explosionType.damage(explosion, player) || 0;
@@ -180,16 +177,18 @@ function drawProjectile() {
 }
 
 function fadeProjectiles(amount) {
-  const imageData = projectiles.getImageData(0, 0, W, H);
-  for (let i=0; i<imageData.data.length; i+=4) imageData.data[i+3] -= amount;
+  // This leaves traces during rendering. Zeno's paradox :(
+  prevProjectiles.globalAlpha = 1 - (amount / 255);
+  prevProjectiles.clearRect(0, 0, W, H);
+  prevProjectiles.drawImage(projectiles.canvas, 0, 0, W, H);
   projectiles.clearRect(0, 0, W, H);
-  projectiles.putImageData(imageData, 0, 0);
+  projectiles.drawImage(prevProjectiles.canvas, 0, 0, W, H);
 }
 
 function drawExplosions() {
   const {weapon} = projectile;
   const explosionType = EXPLOSION_TYPES[weapon.explosion.type];
-  explosionType.draw(explosion, foreground, terrain);
+  explosionType.draw(explosion, foreground);
 }
 
 function drawStatus() {

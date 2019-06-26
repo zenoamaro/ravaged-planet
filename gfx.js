@@ -106,7 +106,7 @@ export function drawParagraph(ctx, text, x, y, w, h, color) {
 
 export function loop(fn) {
   (function looped() {
-    requestAnimationFrame(looped);
     fn();
+    requestAnimationFrame(looped);
   })();
 }

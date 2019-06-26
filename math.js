@@ -1,9 +1,9 @@
 
-export function coords(width, i) {
-  return [i%width, Math.floor(i/width)];
+export function index2coords(width, i) {
+  return [i % width, Math.floor(i/width)];
 }
 
-export function index(width, x, y) {
+export function coords2index(width, x, y) {
   return y * width + x;
 }
 

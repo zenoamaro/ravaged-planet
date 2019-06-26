@@ -25,9 +25,12 @@ export const EXPLOSION_TYPES = {
     update(explosion) {
       return ++explosion.cr < explosion.r;
     },
-    draw(explosion, foreground, terrain) {
+    draw(explosion, foreground) {
       const {x, y, cr} = explosion;
       drawExplosion(foreground, x, y, cr);
+    },
+    clip(explosion, terrain) {
+      const {x, y, cr} = explosion;
       clipTerrain(terrain, (ctx) => drawExplosion(ctx, x, y, cr));
     },
     damage(explosion, player) {
@@ -44,9 +47,12 @@ export const EXPLOSION_TYPES = {
     update(explosion) {
       return ++explosion.cr < explosion.r;
     },
-    draw(explosion, foreground, terrain) {
+    draw(explosion, foreground) {
       const {x, y, cr} = explosion;
       drawExplosion(foreground, x, y, cr);
+    },
+    clip(explosion, terrain) {
+      const {x, y, cr} = explosion;
       drawExplosion(terrain, x, y, cr);
     },
     damage(explosion, player) {}
