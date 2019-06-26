@@ -11,6 +11,14 @@ export function createOsc() {
   return osc;
 }
 
+export function playTickSound() {
+  const osc = createOsc();
+  osc.frequency.setValueAtTime(440, audio.currentTime);
+  osc.frequency.setValueAtTime(0, audio.currentTime + 0.005);
+  osc.start();
+  osc.stop(audio.currentTime + 0.005);
+}
+
 function clickInit() {
   const osc = createOsc();
   osc.start();

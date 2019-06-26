@@ -66,7 +66,7 @@ export const EXPLOSION_TYPES = {
       const {x, y, cr, osc} = explosion;
       const f = explosion.cr % 2 === 0 ? 220 + explosion.cr : 0;
       osc.frequency.setValueAtTime(f, audio.currentTime);
-      osc.frequency.setValueAtTime(0, audio.currentTime+1);
+      osc.frequency.setValueAtTime(0, audio.currentTime+0.1);
       drawExplosion(foreground, x, y, cr);
     },
     clip(explosion, terrain) {

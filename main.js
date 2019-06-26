@@ -3,7 +3,7 @@ import {createCanvas, drawLine, drawRect, drawText, loop} from './gfx.js';
 import {key} from './input.js';
 import {clamp, deg2rad, parable, randomInt, vec, wrap} from './math.js';
 import {createSky} from './sky.js';
-import {audio, createOsc} from './sound.js';
+import {audio, createOsc, playTickSound} from './sound.js';
 import {collapseTerrain, createTerrain, isTerrain, landHeight, closestLand} from './terrain.js';
 import {WEAPON_TYPES, EXPLOSION_TYPES} from './weapons.js';
 import {sample} from './utils.js';
@@ -53,15 +53,20 @@ function update() {
   else if (state === 'aim') {
     const player = players[currentPlayer];
     const {x, y, a, p, energy} = player;
+    const maxPower = energy * PLAYER_ENERGY_POWER_MULTIPLIER;
 
     if (key('ArrowLeft')) {
       player.a = wrap(0, a -1, 180);
+      if (a % 2 === 0) playTickSound();
     } else if (key('ArrowRight')) {
       player.a = wrap(0, a +1, 180);
+      if (a % 2 === 0) playTickSound();
     } else if (key('ArrowUp')) {
-      player.p = clamp(0, p +1, energy * PLAYER_ENERGY_POWER_MULTIPLIER);
+      player.p = clamp(0, p +2, maxPower);
+      if (p < maxPower && p % 4 === 0) playTickSound();
     } else if (key('ArrowDown')) {
-      player.p = clamp(0, p -1, energy * PLAYER_ENERGY_POWER_MULTIPLIER);
+      player.p = clamp(0, p -2, maxPower);
+      if (p > 0 && p % 4 === 0) playTickSound();
     } else if (key(' ')) {
       state = 'fire';
       const [px, py] = vec(x, y-3, a+180, 5);
