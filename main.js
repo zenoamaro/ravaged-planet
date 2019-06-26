@@ -5,7 +5,7 @@ import {clamp, deg2rad, parable, randomInt, vec, wrap} from './math.js';
 import {createSky} from './sky.js';
 import {audio, createOsc, playTickSound} from './sound.js';
 import {collapseTerrain, createTerrain, isTerrain, landHeight, closestLand} from './terrain.js';
-import {WEAPON_TYPES, EXPLOSION_TYPES} from './weapons.js';
+import {WEAPON_TYPES, EXPLOSION_TYPES, DEATH_SPECS} from './weapons.js';
 import {sample} from './utils.js';
 
 
@@ -145,8 +145,9 @@ function update() {
     if (!dyingPlayer) {state = 'end-turn'; return}
 
     const {x, y} = dyingPlayer;
-    const explosionType = sample(Object.values(EXPLOSION_TYPES));
-    explosion = explosionType.create({r:25}, x, y);
+    const explosionSpec = sample(DEATH_SPECS);
+    const explosionType = EXPLOSION_TYPES[explosionSpec.type];
+    explosion = explosionType.create(explosionSpec, x, y);
     dyingPlayer.dead = true;
     state = 'explosion';
   }

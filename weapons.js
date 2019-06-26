@@ -1,6 +1,6 @@
-import {drawCircle} from './gfx.js';
+import {drawCircle, plot} from './gfx.js';
 import {clipTerrain} from './terrain.js';
-import {within, cycle} from './math.js';
+import {within, cycle, random, randomInt} from './math.js';
 import {createOsc, audio} from './sound.js';
 
 export function drawExplosion(ctx, x, y, r) {
@@ -15,6 +15,12 @@ export const WEAPON_TYPES = [
   {id:'nuke', name:'Nuke', explosion:{type:'blast', r:100}},
   {id:'dirt', name:'Dirt', explosion:{type:'dirt', r:25}},
   {id:'large-dirt', name:'Ton of Dirt', explosion:{type:'dirt', r:75}},
+];
+
+export const DEATH_SPECS = [
+  {type: 'blast', r: 35},
+  {type: 'dirt', r: 50},
+  {type: 'dirtCone', r: 100},
 ];
 
 export const EXPLOSION_TYPES = {
@@ -72,6 +78,53 @@ export const EXPLOSION_TYPES = {
     clip(explosion, terrain) {
       const {x, y, cr} = explosion;
       drawExplosion(terrain, x, y, cr);
+    },
+    damage(explosion, player) {}
+  },
+  dirtCone: {
+    create(spec, x, y) {
+      const {r} = spec;
+      const pattern = [];
+      const osc = createOsc();
+      osc.start();
+      return {type:'dirtCone', x, y, r, cr:0, osc, pattern};
+    },
+    stop(explosion) {
+      const {osc} = explosion;
+      osc.stop();
+    },
+    update(explosion) {
+      return ++explosion.cr < explosion.r;
+    },
+    draw(explosion, foreground) {
+      const {x, y, cr, osc, pattern} = explosion;
+
+      let row = [];
+      for (let cx=0; cx<=1+cr*2; cx++) {
+        row.push(randomInt(0, 3) === 0);
+      }
+      pattern.push(row);
+
+      for (let cy=0; cy<pattern.length; cy++) {
+        const row = pattern[cy];
+        for (let cx=0; cx<row.length; cx++) {
+          if (row[cx]) plot(foreground, x-cy+cx, y-cy, 'burlywood');
+        }
+      }
+
+      const f = explosion.cr % 2 === 0 ? 220 + explosion.cr : 0;
+      osc.frequency.setValueAtTime(f, audio.currentTime);
+      osc.frequency.setValueAtTime(0, audio.currentTime+0.1);
+    },
+    clip(explosion, terrain) {
+      const {x, y, pattern} = explosion;
+
+      for (let cy=0; cy<pattern.length; cy++) {
+        const row = pattern[cy];
+        for (let cx=0; cx<row.length; cx++) {
+          if (row[cx]) plot(terrain, x-cy+cx, y-cy, 'burlywood');
+        }
+      }
     },
     damage(explosion, player) {}
   },
