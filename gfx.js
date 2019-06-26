@@ -60,11 +60,8 @@ export function strokeRect(ctx, x, y, w, h, color) {
 
 export function drawCircle(ctx, x, y, r, color) {
   for (let cy = -r; cy <= r; cy++) {
-    for (let cx = -r; cx <= r; cx++) {
-      if (cx*cx + cy*cy <= r*r + r*0.85) {
-        plot(ctx, x+cx, y+cy, color);
-      }
-    }
+    const w = Math.round(Math.sqrt(r*r - cy*cy));
+    drawRect(ctx, x-w, y+cy, w*2, 1, color);
   }
 }
 
