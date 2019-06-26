@@ -108,6 +108,11 @@ function update() {
     const explosionType = EXPLOSION_TYPES[weapon.explosion.type];
 
     if (!explosionType.update(explosion)) {
+      for (let player of players) {
+        if (player.energy > 0) {
+          player.energy -= explosionType.damage(explosion, player) || 0;
+        }
+      }
       explosion = null;
       state = 'land-collapse';
     }
@@ -128,7 +133,11 @@ function update() {
         stable = false;
       }
     }
-    if (stable) state = 'end-turn';
+    if (stable) state = 'destroy-players';
+  }
+
+  else if (state === 'destroy-players') {
+    state = 'end-turn';
   }
 
   else if (state === 'end-turn') {
@@ -143,6 +152,10 @@ function update() {
 
     state = 'start-turn';
   }
+
+  else {
+    throw new Error(`Invalid state, ${state}`);
+  }
 }
 
 function draw() {
@@ -154,7 +167,8 @@ function draw() {
 }
 
 function drawPlayer(player) {
-  const {x, y, a, c} = player;
+  const {x, y, a, c, energy} = player;
+  if (energy <= 0) return;
   const [px, py] = vec(x, y-3, a+180, 3);
   drawLine(foreground, x, y-3, Math.round(px), Math.round(py), c);
   drawRect(foreground, x-3, y-2, 6, 3, c);

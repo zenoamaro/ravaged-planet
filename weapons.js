@@ -1,5 +1,6 @@
 import {drawCircle} from './gfx.js';
 import {clipTerrain} from './terrain.js';
+import {within} from './math.js';
 
 export function drawExplosion(ctx, x, y, r) {
   const color = 255 - (16 * (r % 16));
@@ -29,6 +30,11 @@ export const EXPLOSION_TYPES = {
       drawExplosion(foreground, x, y, cr);
       clipTerrain(terrain, (ctx) => drawExplosion(ctx, x, y, cr));
     },
+    damage(explosion, player) {
+      if (within(explosion.x, explosion.y, player.x, player.y, explosion.r)) {
+        return 100;
+      }
+    }
   },
   dirt: {
     create(spec, x, y) {
@@ -43,5 +49,6 @@ export const EXPLOSION_TYPES = {
       drawExplosion(foreground, x, y, cr);
       drawExplosion(terrain, x, y, cr);
     },
+    damage(explosion, player) {}
   },
 }
