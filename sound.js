@@ -15,7 +15,7 @@ function clickInit() {
   const osc = createOsc();
   osc.start();
   osc.stop();
-  document.removeEventListener('click', clickInit);
+  document.removeEventListener('keydown', clickInit);
 }
 
-document.addEventListener('click', clickInit);
+document.addEventListener('keydown', clickInit);
