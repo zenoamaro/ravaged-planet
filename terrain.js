@@ -1,4 +1,4 @@
-import {createCanvas, drawRect, clipCanvas, plot} from './gfx.js';
+import {createCanvas, drawRect, clipCanvas} from './gfx.js';
 import {coords2index} from './math.js';
 
 let cachedImageData;

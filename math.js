@@ -14,10 +14,6 @@ export function randomInt(min, max) {
   return Math.round(random(min, max));
 }
 
-export function sample(arr) {
-  return arr[randomInt(0, arr.length-1)];
-}
-
 export function clamp(min, x, max) {
   return Math.max(min, Math.min(x, max));
 }

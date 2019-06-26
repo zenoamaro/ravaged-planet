@@ -9,10 +9,10 @@ export function drawExplosion(ctx, x, y, r) {
 }
 
 export const WEAPON_TYPES = [
-  // {id:'baby-missile', name:'Baby Missile', explosion:{type:'blast', r:5}},
-  // {id:'missile', name:'Missile', explosion:{type:'blast', r:10}},
-  // {id:'baby-nuke', name:'Baby Nuke', explosion:{type:'blast', r:50}},
-  // {id:'nuke', name:'Nuke', explosion:{type:'blast', r:100}},
+  {id:'baby-missile', name:'Baby Missile', explosion:{type:'blast', r:5}},
+  {id:'missile', name:'Missile', explosion:{type:'blast', r:10}},
+  {id:'baby-nuke', name:'Baby Nuke', explosion:{type:'blast', r:50}},
+  {id:'nuke', name:'Nuke', explosion:{type:'blast', r:100}},
   {id:'dirt', name:'Dirt', explosion:{type:'dirt', r:25}},
   {id:'large-dirt', name:'Ton of Dirt', explosion:{type:'dirt', r:75}},
 ];
@@ -23,7 +23,7 @@ export const EXPLOSION_TYPES = {
       const {r} = spec;
       const osc = createOsc();
       osc.start();
-      return {x, y, r, cr:0, osc};
+      return {type:'blast', x, y, r, cr:0, osc};
     },
     update(explosion) {
       return ++explosion.cr < explosion.r;
@@ -53,7 +53,7 @@ export const EXPLOSION_TYPES = {
       const {r} = spec;
       const osc = createOsc();
       osc.start();
-      return {x, y, r, cr:0, osc};
+      return {type:'dirt', x, y, r, cr:0, osc};
     },
     stop(explosion) {
       const {osc} = explosion;
@@ -66,6 +66,7 @@ export const EXPLOSION_TYPES = {
       const {x, y, cr, osc} = explosion;
       const f = explosion.cr % 2 === 0 ? 220 + explosion.cr : 0;
       osc.frequency.setValueAtTime(f, audio.currentTime);
+      osc.frequency.setValueAtTime(0, audio.currentTime+1);
       drawExplosion(foreground, x, y, cr);
     },
     clip(explosion, terrain) {

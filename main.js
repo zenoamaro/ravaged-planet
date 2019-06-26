@@ -6,6 +6,7 @@ import {createSky} from './sky.js';
 import {audio, createOsc} from './sound.js';
 import {collapseTerrain, createTerrain, isTerrain, landHeight, closestLand} from './terrain.js';
 import {WEAPON_TYPES, EXPLOSION_TYPES} from './weapons.js';
+import {sample} from './utils.js';
 
 
 let state = 'start-turn';
@@ -100,16 +101,13 @@ function update() {
   }
 
   else if (state === 'explosion') {
-    const {weapon} = projectile;
-    const explosionType = EXPLOSION_TYPES[weapon.explosion.type];
+    const explosionType = EXPLOSION_TYPES[explosion.type];
 
     if (!explosionType.update(explosion)) {
       explosionType.clip(explosion, terrain);
       explosionType.stop(explosion);
-      for (let player of players) {
-        if (player.energy > 0) {
-          player.energy -= explosionType.damage(explosion, player) || 0;
-        }
+      for (let player of players) if (!player.dead) {
+        player.energy -= explosionType.damage(explosion, player) || 0;
       }
       explosion = null;
       state = 'land-collapse';
@@ -117,14 +115,17 @@ function update() {
   }
 
   else if (state === 'land-collapse') {
-    collapseTerrain(terrain, projectile.x, 100); // FIXME: Hardcoded radius
-    projectile = null;
+    const target = explosion ||projectile;
+    if (target) {
+      collapseTerrain(terrain, target.x, 100); // FIXME: Hardcoded radius
+    }
     state = 'land-players';
   }
 
   else if (state === 'land-players') {
     let stable = true;
     for (let player of players) {
+      if (player.dead) continue;
       const y = closestLand(terrain, player.x, player.y);
       if (player.y !== y) {
         player.y++;
@@ -135,7 +136,14 @@ function update() {
   }
 
   else if (state === 'destroy-players') {
-    state = 'end-turn';
+    const dyingPlayer = players.find(x => x.energy<=0 && !x.dead);
+    if (!dyingPlayer) {state = 'end-turn'; return}
+
+    const {x, y} = dyingPlayer;
+    const explosionType = sample(Object.values(EXPLOSION_TYPES));
+    explosion = explosionType.create({r:25}, x, y);
+    dyingPlayer.dead = true;
+    state = 'explosion';
   }
 
   else if (state === 'end-turn') {
@@ -146,8 +154,9 @@ function update() {
       currentPlayer = wrap(0, currentPlayer+1, players.length);
       player = players[currentPlayer];
       if (i++ === players.length) state = 'game-over';
-    } while (player.energy <= 0)
+    } while (player.dead)
 
+    projectile = null;
     state = 'start-turn';
   }
 
@@ -165,8 +174,8 @@ function draw() {
 }
 
 function drawPlayer(player) {
-  const {x, y, a, c, energy} = player;
-  if (energy <= 0) return;
+  const {x, y, a, c, dead} = player;
+  if (dead) return;
   const [px, py] = vec(x, y-3, a+180, 3);
   drawLine(foreground, x, y-3, Math.round(px), Math.round(py), c);
   drawRect(foreground, x-3, y-2, 6, 3, c);
@@ -187,8 +196,7 @@ function fadeProjectiles(amount) {
 }
 
 function drawExplosions() {
-  const {weapon} = projectile;
-  const explosionType = EXPLOSION_TYPES[weapon.explosion.type];
+  const explosionType = EXPLOSION_TYPES[explosion.type];
   explosionType.draw(explosion, foreground);
 }
 

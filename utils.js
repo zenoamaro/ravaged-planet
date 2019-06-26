@@ -1,3 +1,9 @@
+import {randomInt} from './math.js';
+
+export function sample(arr) {
+  return arr[randomInt(0, arr.length-1)];
+}
+
 export function nextId() {
   // @ts-ignore
   const id = nextId.id || 0;
