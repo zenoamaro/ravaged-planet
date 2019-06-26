@@ -1,4 +1,3 @@
-
 export function index2coords(width, i) {
   return [i % width, Math.floor(i/width)];
 }
@@ -25,6 +24,10 @@ export function clamp(min, x, max) {
 
 export function wrap(min, x, max) {
   return ((x-min + max-min) % (max-min)) + min;
+}
+
+export function cycle(x, d) {
+  return Math.floor(x / d);
 }
 
 export function within(x, y, tx, ty, r) {

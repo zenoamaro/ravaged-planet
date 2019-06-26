@@ -105,6 +105,7 @@ function update() {
 
     if (!explosionType.update(explosion)) {
       explosionType.clip(explosion, terrain);
+      explosionType.stop(explosion);
       for (let player of players) {
         if (player.energy > 0) {
           player.energy -= explosionType.damage(explosion, player) || 0;
