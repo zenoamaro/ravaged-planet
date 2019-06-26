@@ -4,7 +4,7 @@ import {key} from './input.js';
 import {clamp, deg2rad, parable, randomInt, vec, wrap} from './math.js';
 import {createSky} from './sky.js';
 import {audio, createOsc} from './sound.js';
-import {clipTerrain, collapseTerrain, createTerrain, isTerrain, landHeight} from './terrain.js';
+import {clipTerrain, collapseTerrain, createTerrain, isTerrain, landHeight, closestLand} from './terrain.js';
 import {drawExplosion, WEAPON_TYPES, EXPLOSION_TYPES} from './weapons.js';
 
 
@@ -35,7 +35,7 @@ for (let color of PLAYER_COLORS) {
   const x = Math.round(50 + (W-100) / 5 * i);
   const a = x > W/2 ? 45 : 180-45;
   players.push({
-    x, y: landHeight(terrain, x), a,
+    x, y: landHeight(terrain, x)+1, a,
     p: PLAYER_INITIAL_POWER, c: color,
     weapon: WEAPON_TYPES[i % WEAPON_TYPES.length],
     energy: PLAYER_MAX_ENERGY,
@@ -122,7 +122,7 @@ function update() {
   else if (state === 'land-players') {
     let stable = true;
     for (let player of players) {
-      const y = landHeight(terrain, player.x);
+      const y = closestLand(terrain, player.x, player.y);
       if (player.y !== y) {
         player.y++;
         stable = false;

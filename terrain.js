@@ -37,6 +37,15 @@ export function isTerrain(ctx, x, y) {
   return imageData.data[3] > 0;
 }
 
+export function closestLand(ctx, x, y) {
+  const {height} = ctx.canvas;
+  const imageData = ctx.getImageData(x, 0, 1, height);
+  for (let i=y; i<height; i++) {
+    if (imageData.data[i*4+3] !== 0) return i;
+  }
+  return height-1;
+}
+
 export function landHeight(ctx, x) {
   const {height} = ctx.canvas;
   const imageData = ctx.getImageData(x, 0, 1, height);
