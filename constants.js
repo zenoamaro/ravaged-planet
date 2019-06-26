@@ -13,14 +13,9 @@ export const PLAYER_COLORS = [
   'orchid',
 ];
 
-export const WEAPON_TYPES = [
-  {id:'baby-missile', name:'Baby Missile', xr:5},
-  {id:'missile', name:'Missile', xr:10},
-  {id:'baby-nuke', name:'Baby Nuke', xr:50},
-  {id:'nuke', name:'Nuke', xr:100},
-];
-
 export const PLAYER_INITIAL_POWER = 300;
+export const PLAYER_MAX_ENERGY = 100;
+export const PLAYER_ENERGY_POWER_MULTIPLIER = 10;
 export const MAX_WIND = 25;
 export const REDUCTION_FACTOR = 10;
 export const MIN_BULLET_SOUND_FREQUENCY = 220;

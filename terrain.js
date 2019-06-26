@@ -1,5 +1,4 @@
 import {createCanvas, drawRect, clipCanvas, plot} from './gfx.js';
-import {randomInt} from './math.js';
 
 export function createTerrain(width, height) {
   const terrain = createCanvas(width, height);
