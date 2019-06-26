@@ -8,6 +8,10 @@ export function drawExplosion(ctx, x, y, r) {
   drawCircle(ctx, x, y, r, `rgb(${color}, 0, 0)`);
 }
 
+export function drawDirt(ctx, x, y, r) {
+  drawCircle(ctx, x, y, r, 'burlywood');
+}
+
 export const WEAPON_TYPES = [
   {id:'baby-missile', name:'Baby Missile', explosion:{type:'blast', r:5}},
   {id:'missile', name:'Missile', explosion:{type:'blast', r:10}},
@@ -73,11 +77,11 @@ export const EXPLOSION_TYPES = {
       const f = explosion.cr % 2 === 0 ? 220 + explosion.cr : 0;
       osc.frequency.setValueAtTime(f, audio.currentTime);
       osc.frequency.setValueAtTime(0, audio.currentTime+0.1);
-      drawExplosion(foreground, x, y, cr);
+      drawDirt(foreground, x, y, cr);
     },
     clip(explosion, terrain) {
       const {x, y, cr} = explosion;
-      drawExplosion(terrain, x, y, cr);
+      drawDirt(terrain, x, y, cr);
     },
     damage(explosion, player) {}
   },
