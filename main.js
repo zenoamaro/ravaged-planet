@@ -1,4 +1,4 @@
-import {H, MAX_BULLET_SOUND_FREQUENCY, MAX_WIND, MIN_BULLET_SOUND_FREQUENCY, PLAYER_COLORS, PLAYER_INITIAL_POWER, REDUCTION_FACTOR, W, Z, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS, PLAYER_MAX_ENERGY, PLAYER_ENERGY_POWER_MULTIPLIER} from './constants.js';
+import {H, MAX_BULLET_SOUND_FREQUENCY, MAX_WIND, MIN_BULLET_SOUND_FREQUENCY, PLAYER_COLORS, PLAYER_INITIAL_POWER, REDUCTION_FACTOR, W, Z, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS, PLAYER_MAX_ENERGY, PLAYER_ENERGY_POWER_MULTIPLIER, FALL_DAMAGE_FACTOR, FALL_DAMAGE_HEIGHT} from './constants.js';
 import {createCanvas, drawLine, drawRect, drawText, loop} from './gfx.js';
 import {key} from './input.js';
 import {clamp, deg2rad, parable, randomInt, vec, wrap} from './math.js';
@@ -42,12 +42,16 @@ for (let color of PLAYER_COLORS) {
     weapon: WEAPON_TYPES[0],
     energy: PLAYER_MAX_ENERGY,
     ai: i !== 0 ? 'moron' : undefined,
+    fallHeight: 0,
   });
   i++;
 }
 
 function update() {
   if (state === 'start-turn') {
+    const player = players[currentPlayer];
+    player.fallHeight = 0;
+
     wind = randomInt(-MAX_WIND, +MAX_WIND);
     state = 'aim';
   }
@@ -153,8 +157,11 @@ function update() {
       if (player.dead) continue;
       const y = closestLand(terrain, player.x, player.y);
       if (player.y !== y) {
-        player.y++;
         stable = false;
+        player.y++;
+        if (player.fallHeight++ >= FALL_DAMAGE_HEIGHT) {
+          player.energy -= FALL_DAMAGE_FACTOR;
+        }
       }
     }
     if (stable) state = 'destroy-players';
@@ -249,7 +256,7 @@ function drawStatus() {
 
   const player = players[currentPlayer];
   const {weapon} = player;
-  drawText(foreground, `AIM:${player.a}  PWR:${player.p}  ${weapon.name}`, 8, 8, player.c, 'left');
+  drawText(foreground, `NRG:${player.energy}  AIM:${player.a}  PWR:${player.p}  ${weapon.name}`, 8, 8, player.c, 'left');
   drawText(foreground, `WIND: ${wind<=0?'<':''}${Math.abs(wind)}${wind>=0?'>':''}`, W-8, 8, 'white', 'right');
 }
 
