@@ -14,7 +14,7 @@ export function drawDirt(ctx, x, y, r) {
 
 export const WEAPON_TYPES = [
   {id:'baby-missile', name:'Baby Missile', explosion:{type:'blast', r:5}},
-  {id:'missile', name:'Missile', explosion:{type:'blast', r:10}},
+  {id:'missile', name:'Missile', explosion:{type:'blast', r:20}},
   {id:'baby-nuke', name:'Baby Nuke', explosion:{type:'blast', r:50}},
   {id:'nuke', name:'Nuke', explosion:{type:'blast', r:100}},
   {id:'dirt', name:'Dirt', explosion:{type:'dirt', r:25}},
