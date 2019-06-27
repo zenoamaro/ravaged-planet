@@ -10,6 +10,7 @@ import {sample} from './utils.js';
 import {AI_TYPES} from './ai.js';
 
 
+let idle = false;
 let state = 'start-turn';
 const players = [];
 let currentPlayer = 0;
@@ -57,6 +58,8 @@ for (let color of PLAYER_COLORS) {
 }
 
 function update() {
+  idle = false;
+
   if (state === 'start-turn') {
     wind = randomInt(-MAX_WIND, +MAX_WIND);
     state = 'aim';
@@ -95,6 +98,8 @@ function update() {
       playTickSound();
     } else if (key(' ')) {
       shoot = {a, p};
+    } else {
+      idle = true;
     }
 
     if (shoot) {
@@ -236,6 +241,7 @@ function update() {
 }
 
 function draw() {
+  if (idle) return;
   foreground.clearRect(0, 0, W, H);
   if (projectile) drawProjectile();
   for (let tank of players) drawPlayer(tank);
