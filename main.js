@@ -1,4 +1,4 @@
-import {H, MAX_BULLET_SOUND_FREQUENCY, MAX_WIND, MIN_BULLET_SOUND_FREQUENCY, PLAYER_COLORS, PLAYER_INITIAL_POWER, REDUCTION_FACTOR, W, Z, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS, PLAYER_MAX_ENERGY, PLAYER_ENERGY_POWER_MULTIPLIER, FALL_DAMAGE_FACTOR, FALL_DAMAGE_HEIGHT} from './constants.js';
+import {H, MAX_BULLET_SOUND_FREQUENCY, MAX_WIND, MIN_BULLET_SOUND_FREQUENCY, PLAYER_COLORS, PLAYER_INITIAL_POWER, REDUCTION_FACTOR, W, Z, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS, PLAYER_MAX_ENERGY, PLAYER_ENERGY_POWER_MULTIPLIER, FALL_DAMAGE_FACTOR, FALL_DAMAGE_HEIGHT, PLAYER_WEAPON_CHANGE_DELAY} from './constants.js';
 import {createCanvas, drawLine, drawRect, drawText, loop} from './gfx.js';
 import {key} from './input.js';
 import {clamp, deg2rad, parable, randomInt, vec, wrap} from './math.js';
@@ -18,6 +18,7 @@ let prevProjectile = null;
 let explosion = null;
 let wind = 0;
 let fadeCount = 0;
+let lastWeaponChangeTime = 0;
 
 // Init layers
 const sky = createSky(W, H);
@@ -39,7 +40,15 @@ for (let color of PLAYER_COLORS) {
   players.push({
     x, y: landHeight(terrain, x)+1, a,
     p: PLAYER_INITIAL_POWER, c: color,
-    weapon: WEAPON_TYPES[0],
+    weapons: [
+      {type: 'baby-missile', ammo:Infinity},
+      {type: 'missile', ammo:5},
+      {type: 'baby-nuke', ammo:3},
+      {type: 'nuke', ammo:1},
+      {type: 'dirt', ammo:3},
+      {type: 'large-dirt', ammo:1},
+    ],
+    currentWeapon: 0,
     energy: PLAYER_MAX_ENERGY,
     ai: i !== 0 ? 'moron' : undefined,
     fallHeight: 0,
@@ -49,9 +58,6 @@ for (let color of PLAYER_COLORS) {
 
 function update() {
   if (state === 'start-turn') {
-    const player = players[currentPlayer];
-    player.fallHeight = 0;
-
     wind = randomInt(-MAX_WIND, +MAX_WIND);
     state = 'aim';
   }
@@ -82,6 +88,11 @@ function update() {
     } else if (key('ArrowDown')) {
       player.p = clamp(0, p -2, maxPower);
       if (p > 0 && p % 4 === 0) playTickSound();
+    } else if (key('Tab')) {
+      if (Date.now() - lastWeaponChangeTime < PLAYER_WEAPON_CHANGE_DELAY) return;
+      player.currentWeapon = wrap(0, player.currentWeapon+1, player.weapons.length);
+      lastWeaponChangeTime = Date.now();
+      playTickSound();
     } else if (key(' ')) {
       shoot = {a, p};
     }
@@ -89,13 +100,18 @@ function update() {
     if (shoot) {
       const {a, p} = shoot;
       const [px, py] = vec(x, y-3, a+180, 5);
+
+      const weaponType = player.weapons[player.currentWeapon];
+      weaponType.ammo -= 1;
+
       projectile = prevProjectile = {
         osc: createOsc(),
         player: player,
-        weapon: player.weapon,
+        weaponTypeId: weaponType.type,
         ox:px, oy:py, a, p,
         x:px, y:py, t: 0,
       };
+
       projectile.osc.start();
       state = 'fire';
     }
@@ -110,7 +126,8 @@ function update() {
     }
 
     for (let i=0; i<PROJECTILE_ITERATIONS_PER_FRAME; i++) {
-      const {weapon, ox, oy, a, p, t} = projectile;
+      const {weaponTypeId, ox, oy, a, p, t} = projectile;
+      const weapon = WEAPON_TYPES.find(x => x.id === weaponTypeId);
       const [x, y] = parable(t, ox, oy, deg2rad(180+a), p/REDUCTION_FACTOR, wind/REDUCTION_FACTOR);
       const f = (1-(1/H*y)) * (MAX_BULLET_SOUND_FREQUENCY-MIN_BULLET_SOUND_FREQUENCY) + MIN_BULLET_SOUND_FREQUENCY;
       projectile.t += PROJECTILE_ITERATION_PROGRESS;
@@ -180,6 +197,16 @@ function update() {
   }
 
   else if (state === 'end-turn') {
+    const player = players[currentPlayer];
+
+    const weaponType = player.weapons[player.currentWeapon];
+    if (weaponType.ammo <= 0) {
+      player.weapons = player.weapons.filter(x => x !== weaponType);
+    }
+
+    player.currentWeapon = wrap(0, player.currentWeapon, player.weapons.length);
+    player.fallHeight = 0;
+
     let nextPlayer;
 
     for (let p=0; p<players.length; p++) {
@@ -255,8 +282,10 @@ function drawStatus() {
   }
 
   const player = players[currentPlayer];
-  const {weapon} = player;
-  drawText(foreground, `NRG:${player.energy}  AIM:${player.a}  PWR:${player.p}  ${weapon.name}`, 8, 8, player.c, 'left');
+  const {currentWeapon} = player;
+  const weaponType = player.weapons[currentWeapon];
+  const weapon = WEAPON_TYPES.find(x => x.id === weaponType.type);
+  drawText(foreground, `NRG:${player.energy}  AIM:${player.a}  PWR:${player.p}  ${weapon.name}  ${clamp(0, weaponType.ammo, 99)}`, 8, 8, player.c, 'left');
   drawText(foreground, `WIND: ${wind<=0?'<':''}${Math.abs(wind)}${wind>=0?'>':''}`, W-8, 8, 'white', 'right');
 }
 
