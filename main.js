@@ -39,7 +39,6 @@ for (let color of PLAYER_COLORS) {
   players.push({
     x, y: landHeight(terrain, x)+1, a,
     p: PLAYER_INITIAL_POWER, c: color,
-    // weapon: WEAPON_TYPES[i % WEAPON_TYPES.length],
     weapon: WEAPON_TYPES[0],
     energy: PLAYER_MAX_ENERGY,
     ai: i !== 0 ? 'moron' : undefined,
@@ -174,17 +173,27 @@ function update() {
   }
 
   else if (state === 'end-turn') {
-    let i = 0;
-    let player;
+    let nextPlayer;
 
-    do {
-      currentPlayer = wrap(0, currentPlayer+1, players.length);
-      player = players[currentPlayer];
-      if (i++ === players.length) state = 'game-over';
-    } while (player.dead)
+    for (let p=0; p<players.length; p++) {
+      const i = wrap(0, currentPlayer+p+1, players.length);
+      if (!players[i].dead) {nextPlayer = i; break}
+    }
+
+    if (nextPlayer == null) return state = 'game-over';
+    else if (nextPlayer === currentPlayer) return state = 'player-win';
+    else currentPlayer = nextPlayer;
 
     projectile = null;
     state = 'start-turn';
+  }
+
+  else if (state === 'player-win') {
+    //
+  }
+
+  else if (state === 'game-over') {
+    //
   }
 
   else {
@@ -227,6 +236,17 @@ function drawExplosions() {
 }
 
 function drawStatus() {
+  if (state === 'player-win') {
+    const player = players[currentPlayer];
+    drawText(foreground, `Player ${currentPlayer+1} wins!`, 8, 8, player.c, 'left');
+    return;
+  }
+
+  else if (state === 'game-over') {
+    drawText(foreground, `EVERYBODY IS DEAD`, 8, 8, 'white', 'left');
+    return;
+  }
+
   const player = players[currentPlayer];
   const {weapon} = player;
   drawText(foreground, `AIM:${player.a}  PWR:${player.p}  ${weapon.name}`, 8, 8, player.c, 'left');
