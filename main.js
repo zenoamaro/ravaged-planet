@@ -285,7 +285,7 @@ function drawStatus() {
   const {currentWeapon} = player;
   const weaponType = player.weapons[currentWeapon];
   const weapon = WEAPON_TYPES.find(x => x.id === weaponType.type);
-  drawText(foreground, `NRG:${player.energy}  AIM:${player.a}  PWR:${player.p}  ${weapon.name}  ${clamp(0, weaponType.ammo, 99)}`, 8, 8, player.c, 'left');
+  drawText(foreground, `NRG:${player.energy}  AIM:${player.a}  PWR:${player.p}  ${clamp(0, weaponType.ammo, 99)} ${weapon.name}`, 8, 8, player.c, 'left');
   drawText(foreground, `WIND: ${wind<=0?'<':''}${Math.abs(wind)}${wind>=0?'>':''}`, W-8, 8, 'white', 'right');
 }
 
