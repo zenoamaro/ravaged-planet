@@ -7,6 +7,7 @@ import {audio, createOsc, playTickSound} from './sound.js';
 import {collapseTerrain, createTerrain, isTerrain, landHeight, closestLand} from './terrain.js';
 import {WEAPON_TYPES, EXPLOSION_TYPES, DEATH_SPECS} from './weapons.js';
 import {sample} from './utils.js';
+import {AI_TYPES} from './ai.js';
 
 
 let state = 'start-turn';
@@ -16,12 +17,12 @@ let projectile = null;
 let prevProjectile = null;
 let explosion = null;
 let wind = 0;
+let fadeCount = 0;
 
 // Init layers
 const sky = createSky(W, H);
 const terrain = createTerrain(W, H);
 const projectiles = createCanvas(W, H);
-const prevProjectiles = createCanvas(W, H);
 const foreground = createCanvas(W, H);
 
 for (let c of [sky, terrain, projectiles, foreground]) {
@@ -38,8 +39,10 @@ for (let color of PLAYER_COLORS) {
   players.push({
     x, y: landHeight(terrain, x)+1, a,
     p: PLAYER_INITIAL_POWER, c: color,
-    weapon: WEAPON_TYPES[i % WEAPON_TYPES.length],
+    // weapon: WEAPON_TYPES[i % WEAPON_TYPES.length],
+    weapon: WEAPON_TYPES[0],
     energy: PLAYER_MAX_ENERGY,
+    ai: i !== 0 ? 'moron' : undefined,
   });
   i++;
 }
@@ -54,8 +57,17 @@ function update() {
     const player = players[currentPlayer];
     const {x, y, a, p, energy} = player;
     const maxPower = energy * PLAYER_ENERGY_POWER_MULTIPLIER;
+    let shoot;
 
-    if (key('ArrowLeft')) {
+    if (player.ai) {
+      let ai = AI_TYPES[player.ai];
+      const plan = ai.decide();
+      const a = player.a = wrap(0, plan.a, 180);
+      const p = player.p = wrap(0, plan.p, maxPower);
+      shoot = {a, p};
+    }
+
+    else if (key('ArrowLeft')) {
       player.a = wrap(0, a -1, 180);
       if (a % 2 === 0) playTickSound();
     } else if (key('ArrowRight')) {
@@ -68,7 +80,11 @@ function update() {
       player.p = clamp(0, p -2, maxPower);
       if (p > 0 && p % 4 === 0) playTickSound();
     } else if (key(' ')) {
-      state = 'fire';
+      shoot = {a, p};
+    }
+
+    if (shoot) {
+      const {a, p} = shoot;
       const [px, py] = vec(x, y-3, a+180, 5);
       projectile = prevProjectile = {
         osc: createOsc(),
@@ -78,12 +94,17 @@ function update() {
         x:px, y:py, t: 0,
       };
       projectile.osc.start();
+      state = 'fire';
     }
   }
 
   else if (state === 'fire') {
     prevProjectile = {...projectile};
-    fadeProjectiles(5);
+
+    if (++fadeCount % 3 === 0) {
+      fadeProjectiles(2);
+      fadeCount = 0;
+    }
 
     for (let i=0; i<PROJECTILE_ITERATIONS_PER_FRAME; i++) {
       const {weapon, ox, oy, a, p, t} = projectile;
@@ -193,12 +214,11 @@ function drawProjectile() {
 }
 
 function fadeProjectiles(amount) {
-  // This leaves traces during rendering. Zeno's paradox :(
-  prevProjectiles.globalAlpha = 1 - (amount / 255);
-  prevProjectiles.clearRect(0, 0, W, H);
-  prevProjectiles.drawImage(projectiles.canvas, 0, 0, W, H);
+  // TODO: Very expensive, optimize
+  const data = projectiles.getImageData(0, 0, W, H);
+  for (let i=0; i<data.data.length; i+=4) data.data[i+3] -= amount;
   projectiles.clearRect(0, 0, W, H);
-  projectiles.drawImage(prevProjectiles.canvas, 0, 0, W, H);
+  projectiles.putImageData(data, 0, 0);
 }
 
 function drawExplosions() {
