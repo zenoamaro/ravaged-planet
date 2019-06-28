@@ -4,7 +4,7 @@ import {key} from './input.js';
 import {clamp, deg2rad, parable, randomInt, vec, wrap} from './math.js';
 import {createSky} from './sky.js';
 import {audio, createOsc, playTickSound} from './sound.js';
-import {collapseTerrain, createTerrain, isTerrain, landHeight, closestLand} from './terrain.js';
+import {collapseTerrain, createTerrain, isTerrain, landHeight, closestLand, clipTerrain} from './terrain.js';
 import {WEAPON_TYPES, EXPLOSION_TYPES, DEATH_SPECS} from './weapons.js';
 import {sample} from './utils.js';
 import {AI_TYPES} from './ai.js';
@@ -37,10 +37,12 @@ for (let c of [sky, terrain, projectiles, foreground]) {
 let i=0;
 for (let color of PLAYER_COLORS) {
   const x = Math.round(50 + (W-100) / 5 * i);
+  const y = landHeight(terrain, x) + 1;
   const a = x > W/2 ? 45 : 180-45;
   players.push({
-    x, y: landHeight(terrain, x)+1, a,
-    p: PLAYER_INITIAL_POWER, c: color,
+    x, y, a,
+    c: color,
+    p: PLAYER_INITIAL_POWER,
     weapons: [
       {type: 'baby-missile', ammo:Infinity},
       {type: 'missile', ammo:5},
@@ -54,6 +56,7 @@ for (let color of PLAYER_COLORS) {
     ai: i !== 0 ? 'moron' : undefined,
     fallHeight: 0,
   });
+  clipTerrain(terrain, (ctx) => drawRect(ctx, x-4, 0, 8, y, ctx.color));
   i++;
 }
 
