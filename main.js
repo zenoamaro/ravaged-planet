@@ -258,7 +258,8 @@ function drawPlayer(player) {
   if (dead) return;
   const [px, py] = vec(x, y-3, a+180, 3);
   drawLine(foreground, x, y-3, Math.round(px), Math.round(py), c);
-  drawRect(foreground, x-3, y-2, 6, 3, c);
+  drawRect(foreground, x-4, y-2, 8, 2, c);
+  drawRect(foreground, x-3, y-0, 6, 1, c);
 }
 
 function drawProjectile() {
