@@ -6,7 +6,7 @@ gain.connect(audio.destination);
 
 export function createOsc() {
   const osc = audio.createOscillator();
-  osc.type = 'square';
+  osc.type = 'triangle';
   osc.connect(gain);
   return osc;
 }
