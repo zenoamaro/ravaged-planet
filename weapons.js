@@ -8,8 +8,8 @@ export function drawExplosion(ctx, x, y, r) {
   drawCircle(ctx, x, y, r, `rgb(${color}, 0, 0)`);
 }
 
-export function drawDirt(ctx, x, y, r) {
-  drawCircle(ctx, x, y, r, 'burlywood');
+export function drawDirt(ctx, x, y, r, c) {
+  drawCircle(ctx, x, y, r, c);
 }
 
 export const WEAPON_TYPES = [
@@ -72,12 +72,12 @@ export const EXPLOSION_TYPES = {
     update(explosion) {
       return ++explosion.cr < explosion.r;
     },
-    draw(explosion, foreground) {
+    draw(explosion, foreground, terrain) {
       const {x, y, cr, osc} = explosion;
       const f = explosion.cr % 2 === 0 ? 220 + explosion.cr : 0;
       osc.frequency.setValueAtTime(f, audio.currentTime);
       osc.frequency.setValueAtTime(0, audio.currentTime+0.1);
-      drawDirt(foreground, x, y, cr);
+      drawDirt(foreground, x, y, cr, terrain.color);
     },
     clip(explosion, terrain) {
       const {x, y, cr} = explosion;
@@ -100,7 +100,7 @@ export const EXPLOSION_TYPES = {
     update(explosion) {
       return ++explosion.cr < explosion.r;
     },
-    draw(explosion, foreground) {
+    draw(explosion, foreground, terrain) {
       const {x, y, cr, osc, pattern} = explosion;
 
       let row = [];
@@ -112,7 +112,7 @@ export const EXPLOSION_TYPES = {
       for (let cy=0; cy<pattern.length; cy++) {
         const row = pattern[cy];
         for (let cx=0; cx<row.length; cx++) {
-          if (row[cx]) plot(foreground, x-cy+cx, y-cy, 'burlywood');
+          if (row[cx]) plot(foreground, x-cy+cx, y-cy, terrain.color);
         }
       }
 
@@ -126,7 +126,7 @@ export const EXPLOSION_TYPES = {
       for (let cy=0; cy<pattern.length; cy++) {
         const row = pattern[cy];
         for (let cx=0; cx<row.length; cx++) {
-          if (row[cx]) plot(terrain, x-cy+cx, y-cy, 'burlywood');
+          if (row[cx]) plot(terrain, x-cy+cx, y-cy, terrain.color);
         }
       }
     },

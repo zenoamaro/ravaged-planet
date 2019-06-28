@@ -1,5 +1,6 @@
-import {createCanvas, drawRect, clipCanvas} from './gfx.js';
-import {coords2index} from './math.js';
+import {createCanvas, drawRect, clipCanvas, drawCircle} from './gfx.js';
+import {coords2index, random, randomInt, clamp} from './math.js';
+import {sample} from './utils.js';
 
 let cachedImageData;
 
@@ -10,18 +11,46 @@ function cacheImageData(ctx) {
 
 export function createTerrain(width, height) {
   const terrain = createCanvas(width, height);
+  const generateTerrain = sample(Object.values(TERRAIN_TYPES));
   generateTerrain(terrain);
   return terrain;
 }
 
-export function generateTerrain(ctx) {
-  const {width, height} = ctx.canvas;
-  for (let x=0; x<width; x++) {
-    const h = Math.round(120 + 30 * Math.sin(x/25));
-    drawRect(ctx, x, height-h, 1, h, 'burlywood');
+const TERRAIN_TYPES = {
+  mountain(ctx) {
+    ctx.color = sample(['palegreen', 'white']); // FIXME
+    const {width, height} = ctx.canvas;
+    const stepCount = 8;
+    const stepSize = width / stepCount;
+
+    let cy = random(.3, .7) * height;
+    let dy = 0;
+
+    for (let x=0; x<width; x++) {
+      if (x % stepSize === 0) dy = ((random(.3, .7)*height)-cy)/stepSize;
+      if (x % (stepSize/16) === 0) dy = dy - random(-1, 1);
+      cy = clamp(0, Math.round(cy + dy), height);
+      drawRect(ctx, x, cy, 1, height-cy, ctx.color);
+    }
+
+    cacheImageData(ctx);
+  },
+
+  sand(ctx) {
+    ctx.color = 'burlywood'; // FIXME
+    const {width, height} = ctx.canvas;
+    const stepCount = 16;
+    const stepSize = width / stepCount;
+
+    for (let s=0; s<=stepCount; s++) {
+      drawCircle(ctx, s*stepSize, height, randomInt(stepSize, stepSize*2), ctx.color);
+      if (s % 3 === 0) drawCircle(ctx, s*stepSize, 0, randomInt(0, stepSize*4), ctx.color);
+    }
+
+    cacheImageData(ctx);
+    collapseTerrain(ctx, width/2, width/2);
   }
-  cacheImageData(ctx);
-}
+};
 
 export function collapseTerrain(ctx, ox, r) {
   const {height} = ctx.canvas;
@@ -37,7 +66,7 @@ export function collapseTerrain(ctx, ox, r) {
     }
 
     ctx.clearRect(left+x, 0, 1, height);
-    drawRect(ctx, left+x, height-land, 1, land, 'burlywood');
+    drawRect(ctx, left+x, height-land, 1, land, ctx.color);
   }
 
   cacheImageData(ctx);

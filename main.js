@@ -11,7 +11,7 @@ import {AI_TYPES} from './ai.js';
 
 
 let idle = false;
-let state = 'start-turn';
+let state = 'start-game';
 const players = [];
 let currentPlayer = 0;
 let projectile = null;
@@ -60,8 +60,12 @@ for (let color of PLAYER_COLORS) {
 function update() {
   idle = false;
 
-  if (state === 'start-turn') {
+  if (state === 'start-game') {
     wind = randomInt(-MAX_WIND, +MAX_WIND);
+    state = 'start-turn';
+  }
+
+  else if (state === 'start-turn') {
     state = 'aim';
   }
 
@@ -272,7 +276,7 @@ function fadeProjectiles(amount) {
 
 function drawExplosions() {
   const explosionType = EXPLOSION_TYPES[explosion.type];
-  explosionType.draw(explosion, foreground);
+  explosionType.draw(explosion, foreground, terrain);
 }
 
 function drawStatus() {
