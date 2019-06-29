@@ -1,4 +1,4 @@
-import {H, PROJECTILE_MAX_SOUND_FREQUENCY, MAX_WIND, PROJECTILE_MIN_SOUND_FREQUENCY, PLAYER_COLORS, PLAYER_INITIAL_POWER, PROJECTILE_POWER_REDUCTION_FACTOR, W, Z, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS, PLAYER_MAX_ENERGY, PLAYER_ENERGY_POWER_MULTIPLIER, PLAYER_FALL_DAMAGE_FACTOR, PLAYER_FALL_DAMAGE_HEIGHT, PLAYER_WEAPON_CHANGE_DELAY, PARTICLE_AMOUNT, PROJECTILE_WIND_REDUCTION_FACTOR, PARTICLE_POWER_REDUCTION_FACTOR, PARTICLE_WIND_REDUCTION_FACTOR, PARTICLE_MIN_POWER_FACTOR, PARTICLE_MAX_POWER_FACTOR, PARTICLE_MIN_LIFETIME, PARTICLE_TIME_FACTOR, PLAYER_EXPLOSION_PARTICLE_POWER} from './constants.js';
+import {H, PROJECTILE_MAX_SOUND_FREQUENCY, MAX_WIND, PROJECTILE_MIN_SOUND_FREQUENCY, PLAYER_COLORS, PLAYER_INITIAL_POWER, PROJECTILE_POWER_REDUCTION_FACTOR, W, Z, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS, PLAYER_MAX_ENERGY, PLAYER_ENERGY_POWER_MULTIPLIER, PLAYER_FALL_DAMAGE_FACTOR, PLAYER_FALL_DAMAGE_HEIGHT, PLAYER_WEAPON_CHANGE_DELAY, PARTICLE_AMOUNT, PROJECTILE_WIND_REDUCTION_FACTOR, PARTICLE_POWER_REDUCTION_FACTOR, PARTICLE_WIND_REDUCTION_FACTOR, PARTICLE_MIN_POWER_FACTOR, PARTICLE_MAX_POWER_FACTOR, PARTICLE_MIN_LIFETIME, PARTICLE_TIME_FACTOR, PLAYER_EXPLOSION_PARTICLE_POWER, EXPLOSION_SHAKE_REDUCTION_FACTOR, MAX_EXPLOSION_SHAKE_FACTOR} from './constants.js';
 import {createCanvas, drawLine, drawRect, drawText, loop, plot} from './gfx.js';
 import {key} from './input.js';
 import {clamp, deg2rad, parable, randomInt, vec, wrap, random} from './math.js';
@@ -21,6 +21,7 @@ let wind = 0;
 let fadeCount = 0;
 let lastWeaponChangeTime = 0;
 let particles = [];
+let screenShake = 0;
 
 // Init layers
 const sky = createSky(W, H);
@@ -173,8 +174,13 @@ function update() {
 
   else if (state === 'explosion') {
     const explosionType = EXPLOSION_TYPES[explosion.type];
+    screenShake = (
+      clamp(0, explosion.r, MAX_EXPLOSION_SHAKE_FACTOR) /
+      EXPLOSION_SHAKE_REDUCTION_FACTOR
+    );
 
     if (!explosionType.update(explosion)) {
+      screenShake = 0;
       explosionType.clip(explosion, terrain);
       explosionType.stop(explosion);
       for (let player of players) if (!player.dead) {
@@ -304,6 +310,7 @@ function draw() {
   drawExplosions();
   drawParticles();
   drawStatus();
+  drawScreenShake();
 }
 
 function drawPlayers() {
@@ -340,6 +347,14 @@ function drawExplosions() {
 function drawParticles() {
   for (let particle of particles) {
     plot(foreground, particle.x, particle.y, particle.c);
+  }
+}
+
+function drawScreenShake() {
+  const x = randomInt(-screenShake, screenShake);
+  const y = randomInt(-screenShake, screenShake);
+  for (let c of [sky, terrain, projectiles, foreground]) {
+    c.canvas.style.transform = `translate(${x}px, ${y}px)`;
   }
 }
 
