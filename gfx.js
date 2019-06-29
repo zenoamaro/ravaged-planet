@@ -29,7 +29,7 @@ export function plot(ctx, x, y, color) {
   ctx.fillRect(x, y, 1, 1);
 }
 
-export function drawLine(ctx, x1, y1, x2, y2, color) {
+export function drawLine(ctx, x1, y1, x2, y2, color, plotFn=plot) {
   const steep = Math.abs(y2 - y1) > Math.abs(x2 - x1);
   if (steep) [x1, y1, x2, y2] = [y1, x1, y2, x2];
   if (x1 > x2) [x1, y1, x2, y2] = [x2, y2, x1, y1];
@@ -41,9 +41,15 @@ export function drawLine(ctx, x1, y1, x2, y2, color) {
   let err = (dX / 2);
   let y = y1;
   for (let x = x1; x <= x2; ++x) {
-      if (steep) plot(ctx, y, x, color); else plot(ctx, x, y, color);
+      if (steep) plotFn(ctx, y, x, color); else plotFn(ctx, x, y, color);
       err = err - dY; if (err < 0) { y += ystep; err += dX }
   }
+}
+
+export function drawLineVirtual(x1, y1, x2, y2, color) {
+  const points = [];
+  drawLine(null, x1, y1, x2, y2, color, (ctx, x, y, c) => points.push({x, y, c}));
+  return points;
 }
 
 export function drawRect(ctx, x, y, w, h, color) {

@@ -1,5 +1,5 @@
 import {H, PROJECTILE_MAX_SOUND_FREQUENCY, MAX_WIND, PROJECTILE_MIN_SOUND_FREQUENCY, PLAYER_COLORS, PLAYER_INITIAL_POWER, PROJECTILE_POWER_REDUCTION_FACTOR, W, Z, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS, PLAYER_MAX_ENERGY, PLAYER_ENERGY_POWER_MULTIPLIER, PLAYER_FALL_DAMAGE_FACTOR, PLAYER_FALL_DAMAGE_HEIGHT, PLAYER_WEAPON_CHANGE_DELAY, PARTICLE_AMOUNT, PROJECTILE_WIND_REDUCTION_FACTOR, PARTICLE_POWER_REDUCTION_FACTOR, PARTICLE_WIND_REDUCTION_FACTOR, PARTICLE_MIN_POWER_FACTOR, PARTICLE_MAX_POWER_FACTOR, PARTICLE_MIN_LIFETIME, PARTICLE_TIME_FACTOR, PLAYER_EXPLOSION_PARTICLE_POWER, EXPLOSION_SHAKE_REDUCTION_FACTOR, MAX_EXPLOSION_SHAKE_FACTOR} from './constants.js';
-import {createCanvas, drawLine, drawRect, drawText, loop, plot} from './gfx.js';
+import {createCanvas, drawLine, drawRect, drawText, loop, plot, drawLineVirtual} from './gfx.js';
 import {key} from './input.js';
 import {clamp, deg2rad, parable, randomInt, vec, wrap, random} from './math.js';
 import {createSky} from './sky.js';
@@ -15,21 +15,21 @@ let state = 'start-game';
 const players = [];
 let currentPlayer = 0;
 let projectile = null;
-let prevProjectile = null;
 let explosion = null;
 let wind = 0;
 let fadeCount = 0;
 let lastWeaponChangeTime = 0;
 let particles = [];
 let screenShake = 0;
+let trajectories = [];
 
 // Init layers
 const sky = createSky(W, H);
 const terrain = createTerrain(W, H);
-const projectiles = createCanvas(W, H);
+const traces = createCanvas(W, H);
 const foreground = createCanvas(W, H);
 
-for (let c of [sky, terrain, projectiles, foreground]) {
+for (let c of [sky, terrain, traces, foreground]) {
   c.canvas.style.width = `${W * Z}px`;
   c.canvas.style.height = `${H * Z}px`;
   document.body.appendChild(c.canvas);
@@ -121,26 +121,22 @@ function update() {
       const weaponType = player.weapons[player.currentWeapon];
       weaponType.ammo -= 1;
 
-      projectile = prevProjectile = {
+      projectile = {
         osc: createOsc(),
         player: player,
         weaponTypeId: weaponType.type,
         ox:px, oy:py, a, p,
         x:px, y:py, t: 0,
+        c: player.c
       };
 
       projectile.osc.start();
-      state = 'fire';
+      state = 'shoot';
     }
   }
 
-  else if (state === 'fire') {
-    prevProjectile = {...projectile};
-
-    if (++fadeCount % 3 === 0) {
-      fadeProjectiles(2);
-      fadeCount = 0;
-    }
+  else if (state === 'shoot') {
+    const prevProjectile = {...projectile};
 
     for (let i=0; i<PROJECTILE_ITERATIONS_PER_FRAME; i++) {
       const {weaponTypeId, ox, oy, a, p, t} = projectile;
@@ -167,9 +163,29 @@ function update() {
         explosion = explosionType.create(explosionSpec, projectile.x, projectile.y);
         createParticles(projectile.x, projectile.y, projectile.p);
         state = 'explosion';
-        return;
+        break;
       }
     }
+
+    if (++fadeCount % 3 === 0) {
+      fadeTrajectories(2);
+      fadeCount = 0;
+    }
+
+    let trajectory = drawLineVirtual(
+      prevProjectile.x, prevProjectile.y,
+      projectile.x, projectile.y,
+      projectile.c,
+    )
+
+    trajectory = trajectory
+      .slice(0, trajectory.length-1) // Cut last pixel to prevent overlap
+      .map(x => ({...x, a:255}));    // Add alpha to all lines
+
+    trajectories = [
+      ...trajectories,
+      ...trajectory,
+    ];
   }
 
   else if (state === 'explosion') {
@@ -305,8 +321,9 @@ function updateParticles() {
 function draw() {
   if (idle && particles.length===0) return;
   foreground.clearRect(0, 0, W, H);
-  drawProjectiles();
+  drawTrajectories();
   drawPlayers();
+  drawProjectile();
   drawExplosions();
   drawParticles();
   drawStatus();
@@ -324,19 +341,25 @@ function drawPlayers() {
   }
 }
 
-function drawProjectiles() {
+function drawTrajectories() {
+  traces.clearRect(0, 0, W, H);
+  for (let {x, y, c, a} of trajectories) {
+    traces.globalAlpha = a/255;
+    plot(traces, x, y, c);
+  }
+  traces.globalAlpha = 1;
+}
+
+function drawProjectile() {
   if (!projectile) return;
-  const {x, y, player} = projectile;
-  drawLine(projectiles, prevProjectile.x, prevProjectile.y, x, y, player.c);
   plot(foreground, clamp(0, projectile.x, W), clamp(0, projectile.y, H), 'white');
 }
 
-function fadeProjectiles(amount) {
-  // TODO: Very expensive, optimize
-  const data = projectiles.getImageData(0, 0, W, H);
-  for (let i=0; i<data.data.length; i+=4) data.data[i+3] -= amount;
-  projectiles.clearRect(0, 0, W, H);
-  projectiles.putImageData(data, 0, 0);
+function fadeTrajectories(amount) {
+  for (let trajectory of trajectories) {
+    trajectory.a -= amount;
+  }
+  trajectories = trajectories.filter(x => x.a > 0);
 }
 
 function drawExplosions() {
@@ -354,7 +377,7 @@ function drawParticles() {
 function drawScreenShake() {
   const x = randomInt(-screenShake, screenShake);
   const y = randomInt(-screenShake, screenShake);
-  for (let c of [sky, terrain, projectiles, foreground]) {
+  for (let c of [sky, terrain, traces, foreground]) {
     c.canvas.style.transform = `translate(${x}px, ${y}px)`;
   }
 }
