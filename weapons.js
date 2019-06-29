@@ -13,18 +13,24 @@ export function drawDirt(ctx, x, y, r, c) {
 }
 
 export const WEAPON_TYPES = [
-  {id:'baby-missile', name:'Baby Missile', explosion:{type:'blast', r:5}},
+  {id:'babyMissile', name:'Baby Missile', explosion:{type:'blast', r:5}},
   {id:'missile', name:'Missile', explosion:{type:'blast', r:20}},
-  {id:'baby-nuke', name:'Baby Nuke', explosion:{type:'blast', r:50}},
+  {id:'babyNuke', name:'Baby Nuke', explosion:{type:'blast', r:50}},
   {id:'nuke', name:'Nuke', explosion:{type:'blast', r:100}},
   {id:'dirt', name:'Dirt', explosion:{type:'dirt', r:25}},
-  {id:'large-dirt', name:'Ton of Dirt', explosion:{type:'dirt', r:75}},
+  {id:'largeDirt', name:'Ton of Dirt', explosion:{type:'dirt', r:75}},
 ];
 
 export const DEATH_SPECS = [
-  {type: 'blast', r: 35},
+  {type: 'blast', r: 15},
+  {type: 'blast', r: 30},
+  {type: 'blast', r: 60},
+  {type: 'dirt', r: 25},
   {type: 'dirt', r: 50},
+  {type: 'dirt', r: 75},
+  {type: 'dirtCone', r: 50},
   {type: 'dirtCone', r: 100},
+  {type: 'dirtCone', r: 150},
 ];
 
 export const EXPLOSION_TYPES = {
