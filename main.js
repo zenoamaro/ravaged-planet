@@ -283,7 +283,6 @@ function update() {
 function createParticles(x, y, p) {
   for (let i = 0; i < PARTICLE_AMOUNT; i++) {
     particles.push({
-      dead: false,
       ox: x, x: x,
       oy: y, y: y,
       p: p * random(PARTICLE_MIN_POWER_FACTOR, PARTICLE_MAX_POWER_FACTOR),
@@ -296,13 +295,17 @@ function createParticles(x, y, p) {
 }
 
 function updateParticles() {
-  for (let particle of particles) {
+  for (let i=particles.length-1; i>=0; i--) {
+    const particle = particles[i];
+
     if (
       particle.y > H ||
       particle.t > PARTICLE_MIN_LIFETIME && isTerrain(terrain, particle.x, particle.y)
     ) {
-      particle.dead = true;
+      particles.splice(i, 1);
+      continue;
     }
+
     const {ox, oy, t, a, p} = particle;
     const [tx, ty] = parable(
       t / PARTICLE_TIME_FACTOR,
@@ -310,12 +313,11 @@ function updateParticles() {
       p / PARTICLE_POWER_REDUCTION_FACTOR,
       wind / PARTICLE_WIND_REDUCTION_FACTOR,
     );
+
     particle.t++;
     particle.x = Math.round(tx);
     particle.y = Math.round(ty);
   }
-
-  particles = particles.filter(x => !x.dead);
 }
 
 function draw() {
