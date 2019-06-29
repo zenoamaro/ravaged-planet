@@ -1,7 +1,7 @@
-import {H, MAX_BULLET_SOUND_FREQUENCY, MAX_WIND, MIN_BULLET_SOUND_FREQUENCY, PLAYER_COLORS, PLAYER_INITIAL_POWER, REDUCTION_FACTOR, W, Z, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS, PLAYER_MAX_ENERGY, PLAYER_ENERGY_POWER_MULTIPLIER, FALL_DAMAGE_FACTOR, FALL_DAMAGE_HEIGHT, PLAYER_WEAPON_CHANGE_DELAY} from './constants.js';
-import {createCanvas, drawLine, drawRect, drawText, loop} from './gfx.js';
+import {H, PROJECTILE_MAX_SOUND_FREQUENCY, MAX_WIND, PROJECTILE_MIN_SOUND_FREQUENCY, PLAYER_COLORS, PLAYER_INITIAL_POWER, PROJECTILE_POWER_REDUCTION_FACTOR, W, Z, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS, PLAYER_MAX_ENERGY, PLAYER_ENERGY_POWER_MULTIPLIER, PLAYER_FALL_DAMAGE_FACTOR, PLAYER_FALL_DAMAGE_HEIGHT, PLAYER_WEAPON_CHANGE_DELAY, PARTICLE_AMOUNT, PROJECTILE_WIND_REDUCTION_FACTOR, PARTICLE_POWER_REDUCTION_FACTOR, PARTICLE_WIND_REDUCTION_FACTOR, PARTICLE_MIN_POWER_FACTOR, PARTICLE_MAX_POWER_FACTOR, PARTICLE_MIN_LIFETIME, PARTICLE_TIME_FACTOR, PLAYER_EXPLOSION_PARTICLE_POWER} from './constants.js';
+import {createCanvas, drawLine, drawRect, drawText, loop, plot} from './gfx.js';
 import {key} from './input.js';
-import {clamp, deg2rad, parable, randomInt, vec, wrap} from './math.js';
+import {clamp, deg2rad, parable, randomInt, vec, wrap, random} from './math.js';
 import {createSky} from './sky.js';
 import {audio, createOsc, playTickSound} from './sound.js';
 import {collapseTerrain, createTerrain, isTerrain, landHeight, closestLand, clipTerrain} from './terrain.js';
@@ -20,6 +20,7 @@ let explosion = null;
 let wind = 0;
 let fadeCount = 0;
 let lastWeaponChangeTime = 0;
+let particles = [];
 
 // Init layers
 const sky = createSky(W, H);
@@ -55,6 +56,7 @@ for (let color of PLAYER_COLORS) {
     energy: PLAYER_MAX_ENERGY,
     ai: i !== 0 ? 'moron' : undefined,
     fallHeight: 0,
+    dead: false,
   });
   clipTerrain(terrain, (ctx) => drawRect(ctx, x-4, 0, 8, y, ctx.color));
   i++;
@@ -62,6 +64,8 @@ for (let color of PLAYER_COLORS) {
 
 function update() {
   idle = false;
+
+  updateParticles();
 
   if (state === 'start-game') {
     wind = randomInt(-MAX_WIND, +MAX_WIND);
@@ -140,18 +144,27 @@ function update() {
     for (let i=0; i<PROJECTILE_ITERATIONS_PER_FRAME; i++) {
       const {weaponTypeId, ox, oy, a, p, t} = projectile;
       const weapon = WEAPON_TYPES.find(x => x.id === weaponTypeId);
-      const [x, y] = parable(t, ox, oy, deg2rad(180+a), p/REDUCTION_FACTOR, wind/REDUCTION_FACTOR);
-      const f = (1-(1/H*y)) * (MAX_BULLET_SOUND_FREQUENCY-MIN_BULLET_SOUND_FREQUENCY) + MIN_BULLET_SOUND_FREQUENCY;
+      const [x, y] = parable(
+        t, ox, oy, deg2rad(180+a),
+        p / PROJECTILE_POWER_REDUCTION_FACTOR,
+        wind / PROJECTILE_WIND_REDUCTION_FACTOR,
+      );
+      const f = (
+        (1 - (1 / H * y)) *
+        (PROJECTILE_MAX_SOUND_FREQUENCY - PROJECTILE_MIN_SOUND_FREQUENCY) +
+        PROJECTILE_MIN_SOUND_FREQUENCY
+      );
       projectile.t += PROJECTILE_ITERATION_PROGRESS;
       projectile.x = Math.ceil(x);
       projectile.y = Math.floor(y);
       projectile.osc.frequency.setValueAtTime(f, audio.currentTime);
 
-      if (y > H || isTerrain(terrain, projectile.x, projectile.y)) {
+      if (projectile.y > H || isTerrain(terrain, projectile.x, projectile.y)) {
         projectile.osc.stop();
         const explosionSpec = weapon.explosion;
         const explosionType = EXPLOSION_TYPES[explosionSpec.type];
         explosion = explosionType.create(explosionSpec, projectile.x, projectile.y);
+        createParticles(projectile.x, projectile.y, projectile.p);
         state = 'explosion';
         return;
       }
@@ -185,8 +198,8 @@ function update() {
       if (player.y !== y) {
         stable = false;
         player.y++;
-        if (player.fallHeight++ >= FALL_DAMAGE_HEIGHT) {
-          player.energy -= FALL_DAMAGE_FACTOR;
+        if (player.fallHeight++ >= PLAYER_FALL_DAMAGE_HEIGHT) {
+          player.energy -= PLAYER_FALL_DAMAGE_FACTOR;
         }
       }
     }
@@ -201,6 +214,7 @@ function update() {
     const explosionSpec = sample(DEATH_SPECS);
     const explosionType = EXPLOSION_TYPES[explosionSpec.type];
     explosion = explosionType.create(explosionSpec, x, y);
+    createParticles(x, y, PLAYER_EXPLOSION_PARTICLE_POWER);
     dyingPlayer.dead = true;
     state = 'explosion';
   }
@@ -244,25 +258,67 @@ function update() {
   }
 }
 
+function createParticles(x, y, p) {
+  for (let i = 0; i < PARTICLE_AMOUNT; i++) {
+    particles.push({
+      dead: false,
+      ox: x, x: x,
+      oy: y, y: y,
+      p: p * random(PARTICLE_MIN_POWER_FACTOR, PARTICLE_MAX_POWER_FACTOR),
+      a: randomInt(0, 359),
+      t: 0,
+      // @ts-ignore: canvas color hack
+      c: terrain.color,
+    });
+  }
+}
+
+function updateParticles() {
+  for (let particle of particles) {
+    if (
+      particle.y > H ||
+      particle.t > PARTICLE_MIN_LIFETIME && isTerrain(terrain, particle.x, particle.y)
+    ) {
+      particle.dead = true;
+    }
+    const {ox, oy, t, a, p} = particle;
+    const [tx, ty] = parable(
+      t / PARTICLE_TIME_FACTOR,
+      ox, oy, deg2rad(180+a),
+      p / PARTICLE_POWER_REDUCTION_FACTOR,
+      wind / PARTICLE_WIND_REDUCTION_FACTOR,
+    );
+    particle.t++;
+    particle.x = Math.round(tx);
+    particle.y = Math.round(ty);
+  }
+
+  particles = particles.filter(x => !x.dead);
+}
+
 function draw() {
-  if (idle) return;
+  if (idle && particles.length===0) return;
   foreground.clearRect(0, 0, W, H);
-  if (projectile) drawProjectile();
-  for (let tank of players) drawPlayer(tank);
-  if (explosion) drawExplosions();
+  drawProjectiles();
+  drawPlayers();
+  drawExplosions();
+  drawParticles();
   drawStatus();
 }
 
-function drawPlayer(player) {
-  const {x, y, a, c, dead} = player;
-  if (dead) return;
-  const [px, py] = vec(x, y-3, a+180, 3);
-  drawLine(foreground, x, y-3, Math.round(px), Math.round(py), c);
-  drawRect(foreground, x-4, y-2, 8, 2, c);
-  drawRect(foreground, x-3, y-0, 6, 1, c);
+function drawPlayers() {
+  for (let player of players) {
+    const {x, y, a, c, dead} = player;
+    if (dead) continue;
+    const [px, py] = vec(x, y-3, a+180, 3);
+    drawLine(foreground, x, y-3, Math.round(px), Math.round(py), c);
+    drawRect(foreground, x-4, y-2, 8, 2, c);
+    drawRect(foreground, x-3, y-0, 6, 1, c);
+  }
 }
 
-function drawProjectile() {
+function drawProjectiles() {
+  if (!projectile) return;
   const {x, y, player} = projectile;
   drawLine(projectiles, prevProjectile.x, prevProjectile.y, x, y, player.c);
 }
@@ -276,8 +332,15 @@ function fadeProjectiles(amount) {
 }
 
 function drawExplosions() {
+  if (!explosion) return;
   const explosionType = EXPLOSION_TYPES[explosion.type];
   explosionType.draw(explosion, foreground, terrain);
+}
+
+function drawParticles() {
+  for (let particle of particles) {
+    plot(foreground, particle.x, particle.y, particle.c);
+  }
 }
 
 function drawStatus() {
