@@ -328,6 +328,7 @@ function drawProjectiles() {
   if (!projectile) return;
   const {x, y, player} = projectile;
   drawLine(projectiles, prevProjectile.x, prevProjectile.y, x, y, player.c);
+  plot(foreground, clamp(0, projectile.x, W), clamp(0, projectile.y, H), 'white');
 }
 
 function fadeProjectiles(amount) {
