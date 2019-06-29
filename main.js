@@ -173,10 +173,7 @@ function update() {
   }
 
   else if (state === 'land-collapse') {
-    const target = explosion ||projectile;
-    if (target) {
-      collapseTerrain(terrain, target.x, 100); // FIXME: Hardcoded radius
-    }
+    collapseTerrain(terrain);
     state = 'land-players';
   }
 

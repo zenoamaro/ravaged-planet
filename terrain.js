@@ -50,15 +50,13 @@ const TERRAIN_TYPES = {
     }
 
     cacheImageData(ctx);
-    collapseTerrain(ctx, width/2, width/2);
+    collapseTerrain(ctx);
   }
 };
 
-export function collapseTerrain(ctx, ox, r) {
-  const {height} = ctx.canvas;
-  const width = r * 2 + 10;
-  const left = ox-r-5;
-  const imageData = ctx.getImageData(left, 0, width, height);
+export function collapseTerrain(ctx, ) {
+  const {width, height} = ctx.canvas;
+  const imageData = ctx.getImageData(0, 0, width, height);
 
   for (let x=0; x<width; x++) {
     let land = 0;
@@ -67,8 +65,8 @@ export function collapseTerrain(ctx, ox, r) {
       if (imageData.data[index] > 0) land++;
     }
 
-    ctx.clearRect(left+x, 0, 1, height);
-    drawRect(ctx, left+x, height-land, 1, land, ctx.color);
+    ctx.clearRect(0+x, 0, 1, height);
+    drawRect(ctx, 0+x, height-land, 1, land, ctx.color);
   }
 
   cacheImageData(ctx);
