@@ -27,10 +27,12 @@ const TERRAIN_TYPES = {
     let dy = 0;
 
     for (let x=0; x<width; x++) {
-      if (x % stepSize === 0) dy = ((random(.3, .7)*height)-cy)/stepSize;
+      if (x % stepSize === 0) dy = ((random(.3, .7) * height) - cy) / stepSize;
       if (x % (stepSize/16) === 0) dy = dy - random(-1, 1);
-      cy = clamp(0, Math.round(cy + dy), height);
-      drawRect(ctx, x, cy, 1, height-cy, ctx.color);
+      const ty = clamp(0, cy + dy, height);
+      const wy = clamp(70, ty, height-70);
+      cy = wy + (ty-wy) * 0.5;
+      drawRect(ctx, x, Math.round(cy), 1, Math.round(height-cy), ctx.color);
     }
 
     cacheImageData(ctx);
