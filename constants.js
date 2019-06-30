@@ -2,6 +2,15 @@ export const W = 640;
 export const H = 400;
 export const Z = 2;
 
+export const SKY_COLORS = [
+  {from:[42, 78, 108], to:[0, 0, 0]},
+  {from:[82, 120, 187], to:[201, 218, 236]},
+  {from:[94, 171, 184], to:[225, 172, 139]},
+  {from:[49, 76, 148], to:[242, 171, 85]},
+  {from:[51, 89, 135], to:[163, 198, 220]},
+  {from:[105, 95, 108], to:[223, 183, 110]},
+];
+
 export const MAX_PLAYERS = 6;
 
 export const PLAYER_COLORS = [
@@ -13,13 +22,47 @@ export const PLAYER_COLORS = [
   ['blueviolet', 'indigo'],
 ];
 
-export const SKY_COLORS = [
-  {from:[42, 78, 108], to:[0, 0, 0]},
-  {from:[82, 120, 187], to:[201, 218, 236]},
-  {from:[94, 171, 184], to:[225, 172, 139]},
-  {from:[49, 76, 148], to:[242, 171, 85]},
-  {from:[51, 89, 135], to:[163, 198, 220]},
-  {from:[105, 95, 108], to:[223, 183, 110]},
+export const PLAYER_STARTING_WEAPONS = [
+  {type: 'babyMissile', ammo:Infinity},
+  {type: 'missile', ammo:5},
+  {type: 'babyNuke', ammo:3},
+  {type: 'nuke', ammo:1},
+  {type: 'smallDirt', ammo:5},
+  {type: 'dirt', ammo:3},
+  {type: 'largeDirt', ammo:1},
+  {type: 'smallDigBomb', ammo:5},
+  {type: 'digBomb', ammo:3},
+  {type: 'largeDigBomb', ammo:1},
+  {type: 'tracer', ammo:Infinity},
+]
+
+export const WEAPON_TYPES = [
+  {id:'tracer', name:'Tracer', explosion:{type:'tracer'}},
+  {id:'babyMissile', name:'Baby Missile', explosion:{type:'blast', r:5}},
+  {id:'missile', name:'Missile', explosion:{type:'blast', r:20}},
+  {id:'babyNuke', name:'Baby Nuke', explosion:{type:'blast', r:50}},
+  {id:'nuke', name:'Nuke', explosion:{type:'blast', r:100}},
+  {id:'smallDirt', name:'Small Dirt', explosion:{type:'dirt', r:25}},
+  {id:'dirt', name:'Dirt', explosion:{type:'dirt', r:50}},
+  {id:'largeDirt', name:'Ton of Dirt', explosion:{type:'dirt', r:75}},
+  {id:'smallDigBomb', name:'Small Dig Bomb', explosion:{type:'digBomb', r:25}},
+  {id:'digBomb', name:'Dig Bomb', explosion:{type:'digBomb', r:50}},
+  {id:'largeDigBomb', name:'Large Dig Bomb', explosion:{type:'digBomb', r:75}},
+];
+
+export const DEATH_SPECS = [
+  {type: 'blast', r: 15},
+  {type: 'blast', r: 30},
+  {type: 'blast', r: 60},
+  {type: 'dirt', r: 25},
+  {type: 'dirt', r: 50},
+  {type: 'dirt', r: 75},
+  {type: 'digBomb', r: 25},
+  {type: 'digBomb', r: 50},
+  {type: 'digBomb', r: 75},
+  {type: 'dirtCone', r: 50},
+  {type: 'dirtCone', r: 100},
+  {type: 'dirtCone', r: 150},
 ];
 
 export const MAX_WIND = 25;

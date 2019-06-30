@@ -1,11 +1,11 @@
-import {H, PROJECTILE_MAX_SOUND_FREQUENCY, MAX_WIND, PROJECTILE_MIN_SOUND_FREQUENCY, PLAYER_COLORS, PLAYER_INITIAL_POWER, PROJECTILE_POWER_REDUCTION_FACTOR, W, Z, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS, PLAYER_MAX_ENERGY, PLAYER_ENERGY_POWER_MULTIPLIER, PLAYER_FALL_DAMAGE_FACTOR, PLAYER_FALL_DAMAGE_HEIGHT, PLAYER_WEAPON_CHANGE_DELAY, PARTICLE_AMOUNT, PROJECTILE_WIND_REDUCTION_FACTOR, PARTICLE_POWER_REDUCTION_FACTOR, PARTICLE_WIND_REDUCTION_FACTOR, PARTICLE_MIN_POWER_FACTOR, PARTICLE_MAX_POWER_FACTOR, PARTICLE_MIN_LIFETIME, PARTICLE_TIME_FACTOR, PLAYER_EXPLOSION_PARTICLE_POWER, EXPLOSION_SHAKE_REDUCTION_FACTOR, MAX_EXPLOSION_SHAKE_FACTOR, TRAJECTORY_FADE_SPEED, PARTICLE_FADE_AMOUNT, TRAJECTORY_FLOAT_SPEED, PLAYER_TANK_BOUNDING_RADIUS} from './constants.js';
+import {H, PROJECTILE_MAX_SOUND_FREQUENCY, MAX_WIND, PROJECTILE_MIN_SOUND_FREQUENCY, PLAYER_COLORS, PLAYER_INITIAL_POWER, PROJECTILE_POWER_REDUCTION_FACTOR, W, Z, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS, PLAYER_MAX_ENERGY, PLAYER_ENERGY_POWER_MULTIPLIER, PLAYER_FALL_DAMAGE_FACTOR, PLAYER_FALL_DAMAGE_HEIGHT, PLAYER_WEAPON_CHANGE_DELAY, PARTICLE_AMOUNT, PROJECTILE_WIND_REDUCTION_FACTOR, PARTICLE_POWER_REDUCTION_FACTOR, PARTICLE_WIND_REDUCTION_FACTOR, PARTICLE_MIN_POWER_FACTOR, PARTICLE_MAX_POWER_FACTOR, PARTICLE_MIN_LIFETIME, PARTICLE_TIME_FACTOR, PLAYER_EXPLOSION_PARTICLE_POWER, EXPLOSION_SHAKE_REDUCTION_FACTOR, MAX_EXPLOSION_SHAKE_FACTOR, TRAJECTORY_FADE_SPEED, PARTICLE_FADE_AMOUNT, TRAJECTORY_FLOAT_SPEED, PLAYER_TANK_BOUNDING_RADIUS, PLAYER_STARTING_WEAPONS, WEAPON_TYPES, DEATH_SPECS} from './constants.js';
 import {createCanvas, drawLine, drawRect, drawText, loop, plot, drawLineVirtual} from './gfx.js';
 import {key} from './input.js';
 import {clamp, deg2rad, parable, randomInt, vec, wrap, random, within} from './math.js';
 import {createSky} from './sky.js';
 import {audio, createOsc, playTickSound} from './sound.js';
 import {collapseTerrain, createTerrain, isTerrain, landHeight, closestLand, clipTerrain} from './terrain.js';
-import {WEAPON_TYPES, EXPLOSION_TYPES, DEATH_SPECS} from './weapons.js';
+import {EXPLOSION_TYPES} from './weapons.js';
 import {sample} from './utils.js';
 import {AI_TYPES} from './ai.js';
 
@@ -44,19 +44,7 @@ for (let [color, borderColor] of PLAYER_COLORS) {
     x, y, a,
     c: color, cb: borderColor,
     p: PLAYER_INITIAL_POWER,
-    weapons: [
-      {type: 'babyMissile', ammo:Infinity},
-      {type: 'missile', ammo:5},
-      {type: 'babyNuke', ammo:3},
-      {type: 'nuke', ammo:1},
-      {type: 'smallDirt', ammo:5},
-      {type: 'dirt', ammo:3},
-      {type: 'largeDirt', ammo:1},
-      {type: 'smallDigBomb', ammo:5},
-      {type: 'digBomb', ammo:3},
-      {type: 'largeDigBomb', ammo:1},
-      {type: 'tracer', ammo:Infinity},
-    ],
+    weapons: [...PLAYER_STARTING_WEAPONS],
     currentWeapon: 0,
     energy: PLAYER_MAX_ENERGY,
     ai: i !== 0 ? 'moron' : undefined,
