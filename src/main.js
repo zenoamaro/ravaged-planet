@@ -189,8 +189,6 @@ function update() {
       }
     }
 
-    fadeTrajectories(TRAJECTORY_FADE_SPEED);
-
     let trajectory = drawLineVirtual(
       prevProjectile.x, prevProjectile.y,
       projectile.x, projectile.y,
@@ -286,6 +284,7 @@ function update() {
     }
 
     projectile = null;
+    fadeTrajectories();
     state = 'start-turn';
   }
 
@@ -403,31 +402,29 @@ function drawPlayers() {
 
 function drawTrajectories() {
   traces.clearRect(0, 0, W, H);
-  for (let {x, y, c, a} of trajectories) {
-    traces.globalAlpha = a / 255;
+  for (let i=trajectories.length-1; i>=0; i--) {
+    const trajectory = trajectories[i];
+    const {x, y, c} = trajectory;
+    traces.globalAlpha = trajectory.a / 255;
     plot(traces, x, y, c);
   }
   traces.globalAlpha = 1;
 }
 
-function drawProjectile() {
-  if (!projectile) return;
-  plot(foreground, clamp(0, projectile.x, W-1), clamp(0, projectile.y, H-1), 'white');
-}
-
-function fadeTrajectories(amount) {
+function fadeTrajectories() {
   for (let i=trajectories.length-1; i>=0; i--) {
     const trajectory = trajectories[i];
-    trajectory.a -= amount;
+    trajectory.a -= TRAJECTORY_FADE_SPEED;
     trajectory.y -= TRAJECTORY_FLOAT_SPEED;
-
-    if (
-      trajectory.a <= 0 || trajectory.y <= 0 ||
-      isTerrain(terrain, trajectory.x, trajectory.y)
-    ) {
+    if (trajectory.a <= 0 || trajectory.y <= 0) {
       trajectories.splice(i, 1);
     }
   }
+}
+
+function drawProjectile() {
+  if (!projectile) return;
+  plot(foreground, clamp(0, projectile.x, W-1), clamp(0, projectile.y, H-1), 'white');
 }
 
 function drawExplosions() {

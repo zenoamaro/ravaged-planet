@@ -25,15 +25,15 @@ export const PLAYER_COLORS = [
 export const PLAYER_STARTING_WEAPONS = [
   {type: 'babyMissile', ammo:Infinity},
   {type: 'missile', ammo:5},
-  {type: 'babyNuke', ammo:3},
-  {type: 'nuke', ammo:1},
-  {type: 'smallDirt', ammo:5},
-  {type: 'dirt', ammo:3},
-  {type: 'largeDirt', ammo:1},
-  {type: 'smallDigBomb', ammo:5},
-  {type: 'digBomb', ammo:3},
-  {type: 'largeDigBomb', ammo:1},
-  {type: 'tracer', ammo:Infinity},
+  // {type: 'babyNuke', ammo:3},
+  // {type: 'nuke', ammo:1},
+  // {type: 'smallDirt', ammo:5},
+  // {type: 'dirt', ammo:3},
+  // {type: 'largeDirt', ammo:1},
+  // {type: 'smallDigBomb', ammo:5},
+  // {type: 'digBomb', ammo:3},
+  // {type: 'largeDigBomb', ammo:1},
+  // {type: 'tracer', ammo:Infinity},
 ]
 
 export const WEAPON_TYPES = [
@@ -91,8 +91,8 @@ export const PROJECTILE_ITERATIONS_PER_FRAME = 30;
 export const PROJECTILE_ITERATION_PROGRESS = 0.01;
 export const PROJECTILE_MIN_SOUND_FREQUENCY = 220;
 export const PROJECTILE_MAX_SOUND_FREQUENCY = 2200;
-export const TRAJECTORY_FADE_SPEED = 0.6;
-export const TRAJECTORY_FLOAT_SPEED = 0.01;
+export const TRAJECTORY_FADE_SPEED = 10;
+export const TRAJECTORY_FLOAT_SPEED = 0.3;
 
 export const PARTICLE_AMOUNT = 30;
 export const PARTICLE_MIN_POWER_FACTOR = 0.4;
