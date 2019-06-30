@@ -2,6 +2,7 @@ import {drawCircle, plot} from './gfx.js';
 import {clipTerrain} from './terrain.js';
 import {within, cycle, random, randomInt} from './math.js';
 import {createOsc, audio} from './sound.js';
+import {PLAYER_TANK_BOUNDING_RADIUS} from './constants.js';
 
 export function drawExplosion(ctx, x, y, r) {
   const color = 255 - (16 * (r % 16));
@@ -48,11 +49,11 @@ export const EXPLOSION_TYPES = {
       clipTerrain(terrain, (ctx) => drawExplosion(ctx, x, y, cr));
     },
     damage(explosion, player) {
-      if (within(explosion.x, explosion.y, player.x-3, player.y, explosion.r)) {
+      if (within(explosion.x, explosion.y, player.x, player.y, explosion.r)) {
         return 100;
       } else if (
-        within(explosion.x, explosion.y, player.x-3, player.y, explosion.r) ||
-        within(explosion.x, explosion.y, player.x+3, player.y, explosion.r)
+        within(explosion.x, explosion.y, player.x-PLAYER_TANK_BOUNDING_RADIUS, player.y, explosion.r) ||
+        within(explosion.x, explosion.y, player.x+PLAYER_TANK_BOUNDING_RADIUS, player.y, explosion.r)
       ) {
         return 50;
       }
