@@ -24,11 +24,11 @@ let trajectories = [];
 
 // Init layers
 const sky = createSky(W, H);
-const terrain = createTerrain(W, H);
 const traces = createCanvas(W, H);
+const terrain = createTerrain(W, H);
 const foreground = createCanvas(W, H);
 
-for (let c of [sky, terrain, traces, foreground]) {
+for (let c of [sky, traces, terrain, foreground]) {
   c.canvas.style.width = `${W * Z}px`;
   c.canvas.style.height = `${H * Z}px`;
   document.body.appendChild(c.canvas);
@@ -346,7 +346,7 @@ function drawPlayers() {
 function drawTrajectories() {
   traces.clearRect(0, 0, W, H);
   for (let {x, y, c, a} of trajectories) {
-    traces.globalAlpha = a/255;
+    traces.globalAlpha = a / 255;
     plot(traces, x, y, c);
   }
   traces.globalAlpha = 1;
