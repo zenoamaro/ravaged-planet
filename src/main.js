@@ -20,6 +20,7 @@ let particles = [];
 let screenShake = 0;
 let trajectories = [];
 let idle = false;
+let winner;
 
 // Init layers
 const sky = createSky(W, H);
@@ -41,6 +42,7 @@ for (let [color, borderColor] of PLAYER_COLORS) {
   const y = landHeight(terrain, x) + 1;
   const a = x > W/2 ? 45 : 180-45;
   players.push({
+    name: `Player ${i+1}`,
     x, y, a,
     c: color, cb: borderColor,
     p: PLAYER_INITIAL_POWER,
@@ -257,6 +259,15 @@ function update() {
   }
 
   else if (state === 'end-turn') {
+    const alivePlayers = players.filter(x => !x.dead);
+
+    if (alivePlayers.length === 0) {
+      return state = 'game-over';
+    } else if (alivePlayers.length === 1) {
+      winner = alivePlayers[0];
+      return state = 'player-win';
+    }
+
     const player = players[currentPlayer];
 
     const weaponType = player.weapons[player.currentWeapon];
@@ -267,16 +278,10 @@ function update() {
     player.currentWeapon = wrap(0, player.currentWeapon, player.weapons.length-1);
     player.fallHeight = 0;
 
-    let nextPlayer;
-
     for (let p=0; p<players.length; p++) {
       const i = wrap(0, currentPlayer+p+1, players.length-1);
-      if (!players[i].dead) {nextPlayer = i; break}
+      if (!players[i].dead) {currentPlayer = i; break}
     }
-
-    if (nextPlayer == null) return state = 'game-over';
-    else if (nextPlayer === currentPlayer) return state = 'player-win';
-    else currentPlayer = nextPlayer;
 
     projectile = null;
     state = 'start-turn';
@@ -434,8 +439,7 @@ function drawScreenShake() {
 
 function drawStatus() {
   if (state === 'player-win') {
-    const player = players[currentPlayer];
-    drawText(foreground, `Player ${currentPlayer+1} wins!`, 8, 8, player.c, 'left');
+    drawText(foreground, `${winner.name} wins!`, 8, 8, winner.c, 'left');
     return;
   }
 
@@ -448,7 +452,7 @@ function drawStatus() {
   const {currentWeapon} = player;
   const weaponType = player.weapons[currentWeapon];
   const weapon = WEAPON_TYPES.find(x => x.id === weaponType.type);
-  drawText(foreground, `NRG:${player.energy}  AIM:${player.a}  PWR:${player.p}  ${clamp(0, weaponType.ammo, 99)} ${weapon.name}`, 8, 8, player.c, 'left');
+  drawText(foreground, `${player.name}   NRG:${player.energy}   AIM:${player.a}   PWR:${player.p}   ${clamp(0, weaponType.ammo, 99)} ${weapon.name}`, 8, 8, player.c, 'left');
   drawText(foreground, `WIND: ${wind<=0?'<':''}${Math.abs(wind)}${wind>=0?'>':''}`, W-8, 8, 'white', 'right');
 }
 
