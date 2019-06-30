@@ -96,4 +96,45 @@ export const PROJECTILE_TYPES = {
     stop() {},
     update() {},
   },
+
+  leapfrog: {
+    create(spec, player, weapon, ox, oy, a, p, wind) {
+      const {n, s} = spec;
+
+      return [{
+        type:'leapfrog',
+        n, s, payload:null,
+        player, weapon, ox, oy, a, p, wind,
+      }];
+    },
+    stop() {},
+    update(projectile, terrain, projectiles, trajectories, explosions) {
+      const {player, weapon, ox, oy, a, p, wind, n, s} = projectile;
+      const projectileType = PROJECTILE_TYPES.normal;
+
+      // FIXME: Ugly
+      if (!projectile.payload) {
+        projectile.n--;
+        projectile.payload = projectileType.create(
+          {}, player, weapon, ox, oy, a, p, wind,
+        )[0];
+      }
+
+      const alive = projectileType.update(
+        projectile.payload, terrain, projectiles, trajectories, explosions
+      );
+
+      if (!alive) {
+        projectileType.stop(projectile.payload)
+        if (n <= 0) return;
+
+        projectile.n--;
+        projectile.payload = projectileType.create(
+          {}, player, weapon, projectile.payload.x, projectile.payload.y-2, a, p-s*n, wind, // FIXME: Y Hack
+        )[0];
+      }
+
+      return true;
+    },
+  },
 }
