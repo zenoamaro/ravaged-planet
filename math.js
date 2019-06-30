@@ -1,8 +1,13 @@
 export function index2coords(width, i) {
-  return [i % width, Math.floor(i/width)];
+  i = Math.round(i);
+  width = Math.round(width);
+  return [i % width, i / width];
 }
 
 export function coords2index(width, x, y) {
+  x = Math.round(x);
+  y = Math.round(y);
+  width = Math.round(width);
   return y * width + x;
 }
 

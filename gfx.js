@@ -25,11 +25,15 @@ export function clipCanvas(ctx, fn) {
 }
 
 export function plot(ctx, x, y, color) {
+  x = Math.round(x); y = Math.round(y);
   ctx.fillStyle = color;
   ctx.fillRect(x, y, 1, 1);
 }
 
 export function drawLine(ctx, x1, y1, x2, y2, color, plotFn=plot) {
+  x1 = Math.round(x1); y1 = Math.round(y1);
+  x2 = Math.round(x2); y2 = Math.round(y2);
+
   const steep = Math.abs(y2 - y1) > Math.abs(x2 - x1);
   if (steep) [x1, y1, x2, y2] = [y1, x1, y2, x2];
   if (x1 > x2) [x1, y1, x2, y2] = [x2, y2, x1, y1];
@@ -53,34 +57,35 @@ export function drawLineVirtual(x1, y1, x2, y2, color) {
 }
 
 export function drawRect(ctx, x, y, w, h, color) {
+  x = Math.round(x); y = Math.round(y);
+  w = Math.round(w); h = Math.round(h);
   ctx.fillStyle = color;
   ctx.fillRect(x, y, w, h);
 }
 
 export function strokeRect(ctx, x, y, w, h, color) {
   if (w === 1 || h === 1) return drawRect(x, y, w, h, color);
+  x = Math.round(x); y = Math.round(y);
+  w = Math.round(w); h = Math.round(h);
   ctx.lineWidth = 1;
   ctx.strokeStyle = color;
   ctx.strokeRect(x+0.5, y+0.5, w-1, h-1);
 }
 
 export function drawCircle(ctx, x, y, r, color) {
+  x = Math.round(x);
+  y = Math.round(y);
+  r = Math.round(r);
   for (let cy = -r; cy <= r; cy++) {
     const w = Math.round(Math.sqrt(r*r - cy*cy));
     drawRect(ctx, x-w, y+cy, w*2, 1, color);
   }
 }
 
-export function plotParable(ctx, x, y, a, v, g) {
-  for (let t=0; t<1000; t+=0.01) {
-    const [fx, fy] = parable(t, x, y, a, v, g);
-    plot(ctx, (fx), (fy), 'white');
-  }
-}
-
 /** @param align {CanvasTextAlign} */
 /** @param baseline {CanvasTextBaseline} */
 export function drawText(ctx, text, x, y, color, align='left', baseline='top') {
+  x = Math.round(x); y = Math.round(y);
   ctx.font = '5px text';
   ctx.textBaseline = baseline;
   ctx.textAlign = align;
@@ -91,8 +96,9 @@ export function drawText(ctx, text, x, y, color, align='left', baseline='top') {
 }
 
 export function drawParagraph(ctx, text, x, y, w, h, color) {
-  let tx = 0;
-  let ty = 0;
+  x = Math.round(x); y = Math.round(y);
+  w = Math.round(w); h = Math.round(h);
+  let tx = 0; let ty = 0;
   // FIXME: Handle unbreakable words longer than width
   const words = splitWords(text);
   for (let word of words) {

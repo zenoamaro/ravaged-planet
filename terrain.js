@@ -32,7 +32,7 @@ const TERRAIN_TYPES = {
       const ty = clamp(0, cy + dy, height);
       const wy = clamp(70, ty, height-70);
       cy = wy + (ty-wy) * 0.5;
-      drawRect(ctx, x, Math.round(cy), 1, Math.round(height-cy), ctx.color);
+      drawRect(ctx, x, cy, 1, height-cy, ctx.color);
     }
 
     cacheImageData(ctx);
