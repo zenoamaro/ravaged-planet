@@ -51,6 +51,7 @@ export const WEAPON_TYPES = [
 ];
 
 export const DEATH_SPECS = [
+  {type: 'blast', r: 5},
   {type: 'blast', r: 15},
   {type: 'blast', r: 30},
   {type: 'blast', r: 60},
@@ -62,7 +63,8 @@ export const DEATH_SPECS = [
   {type: 'digBomb', r: 75},
   {type: 'dirtCone', r: 50},
   {type: 'dirtCone', r: 100},
-  {type: 'dirtCone', r: 150},
+  {type: 'dirtCone', r: 200},
+  {type: 'dirtCone', r: 400},
 ];
 
 export const MAX_WIND = 25;
