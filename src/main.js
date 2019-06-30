@@ -337,6 +337,7 @@ function updateParticles() {
 
 function isTank(x, y) {
   for (let player of players) {
+    if (player.dead) continue;
     if (within(x, y, player.x, player.y, PLAYER_TANK_BOUNDING_RADIUS)) {
       return true;
     }
