@@ -370,7 +370,7 @@ function draw() {
 
 function drawPlayers() {
   for (let player of players) {
-    const {x, y, a, c, cb, dead} = player;
+    const {x, y, a, c, cb, energy, dead} = player;
     if (dead) continue;
     const [px, py] = vec(x, y-3, a+180, 3);
     drawLine(foreground, x-1, y-3, px-1, py, cb);
@@ -383,6 +383,13 @@ function drawPlayers() {
     drawLine(foreground, x, y-3, px, py, c);
     drawRect(foreground, x-4, y-2, 8, 2, c);
     drawRect(foreground, x-3, y-0, 6, 1, c);
+
+    const damage = clamp(0, 1 - energy/PLAYER_MAX_ENERGY, 1);
+    foreground.globalAlpha = damage * 0.7;
+    drawRect(foreground, x-4, y-2, 8, 2, cb);
+    foreground.globalAlpha = damage;
+    drawRect(foreground, x-3, y-0, 6, 1, cb);
+    foreground.globalAlpha = 1;
   }
 }
 
