@@ -36,7 +36,7 @@ export const EXPLOSION_TYPES = {
     },
     draw(explosion, foreground) {
       const {x, y, cr, osc} = explosion;
-      const f = cycle(explosion.cr, 6) % 2 === 0 ? 110 : 220;
+      const f = cycle(explosion.cr, 6) % 2 === 0 ? 55 : 110;
       osc.frequency.setValueAtTime(f, audio.currentTime);
       drawExplosion(foreground, x, y, cr);
     },
@@ -62,7 +62,7 @@ export const EXPLOSION_TYPES = {
   dirt: {
     create(spec, x, y) {
       const {r} = spec;
-      const osc = createOsc('sawtooth');
+      const osc = createOsc('triangle');
       osc.start();
       return {type:'dirt', x, y, r, cr:0, osc};
     },
@@ -89,7 +89,7 @@ export const EXPLOSION_TYPES = {
   digBomb: {
     create(spec, x, y) {
       const {r} = spec;
-      const osc = createOsc('sawtooth');
+      const osc = createOsc('triangle');
       osc.start();
       return {type:'digBomb', x, y, r, cr:0, osc};
     },
@@ -117,7 +117,7 @@ export const EXPLOSION_TYPES = {
     create(spec, x, y) {
       const {r} = spec;
       const pattern = [];
-      const osc = createOsc('sawtooth');
+      const osc = createOsc('triangle');
       osc.start();
       return {type:'dirtCone', x, y, r, cr:0, osc, pattern};
     },
