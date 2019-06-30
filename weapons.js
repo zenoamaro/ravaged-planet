@@ -17,8 +17,12 @@ export const WEAPON_TYPES = [
   {id:'missile', name:'Missile', explosion:{type:'blast', r:20}},
   {id:'babyNuke', name:'Baby Nuke', explosion:{type:'blast', r:50}},
   {id:'nuke', name:'Nuke', explosion:{type:'blast', r:100}},
-  {id:'dirt', name:'Dirt', explosion:{type:'dirt', r:25}},
+  {id:'smallDirt', name:'Small Dirt', explosion:{type:'dirt', r:25}},
+  {id:'dirt', name:'Dirt', explosion:{type:'dirt', r:50}},
   {id:'largeDirt', name:'Ton of Dirt', explosion:{type:'dirt', r:75}},
+  {id:'smallDigBomb', name:'Small Dig Bomb', explosion:{type:'digBomb', r:25}},
+  {id:'digBomb', name:'Dig Bomb', explosion:{type:'digBomb', r:50}},
+  {id:'largeDigBomb', name:'Large Dig Bomb', explosion:{type:'digBomb', r:75}},
 ];
 
 export const DEATH_SPECS = [
@@ -28,6 +32,9 @@ export const DEATH_SPECS = [
   {type: 'dirt', r: 25},
   {type: 'dirt', r: 50},
   {type: 'dirt', r: 75},
+  {type: 'digBomb', r: 25},
+  {type: 'digBomb', r: 50},
+  {type: 'digBomb', r: 75},
   {type: 'dirtCone', r: 50},
   {type: 'dirtCone', r: 100},
   {type: 'dirtCone', r: 150},
@@ -88,6 +95,33 @@ export const EXPLOSION_TYPES = {
     clip(explosion, terrain) {
       const {x, y, cr} = explosion;
       drawDirt(terrain, x, y, cr);
+    },
+    damage(explosion, player) {}
+  },
+  digBomb: {
+    create(spec, x, y) {
+      const {r} = spec;
+      const osc = createOsc();
+      osc.start();
+      return {type:'digBomb', x, y, r, cr:0, osc};
+    },
+    stop(explosion) {
+      const {osc} = explosion;
+      osc.stop();
+    },
+    update(explosion) {
+      return ++explosion.cr < explosion.r;
+    },
+    draw(explosion, foreground, terrain) {
+      const {x, y, cr, osc} = explosion;
+      const f = explosion.cr % 2 === 0 ? 440 - explosion.cr : 0;
+      osc.frequency.setValueAtTime(f, audio.currentTime);
+      osc.frequency.setValueAtTime(0, audio.currentTime+0.1);
+      drawDirt(foreground, x, y, cr, 'brown');
+    },
+    clip(explosion, terrain) {
+      const {x, y, cr} = explosion;
+      clipTerrain(terrain, (ctx) => drawDirt(ctx, x, y, cr));
     },
     damage(explosion, player) {}
   },
