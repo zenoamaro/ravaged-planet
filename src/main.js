@@ -3,7 +3,7 @@ import {createCanvas, drawLine, drawRect, drawText, loop, plot, drawLineVirtual}
 import {key, afterKeyDelay} from './input.js';
 import {clamp, deg2rad, parable, randomInt, vec, wrap, random, within} from './math.js';
 import {createSky} from './sky.js';
-import {audio, createOsc, playTickSound} from './sound.js';
+import {audio, createOsc, playTickSound, createAudioLoop} from './sound.js';
 import {collapseTerrain, createTerrain, isTerrain, landHeight, closestLand, clipTerrain} from './terrain.js';
 import {EXPLOSION_TYPES} from './weapons.js';
 import {sample} from './utils.js';
@@ -26,6 +26,7 @@ const sky = createSky(W, H);
 const traces = createCanvas(W, H);
 const terrain = createTerrain(W, H);
 const foreground = createCanvas(W, H);
+// const music = createAudioLoop('assets/battle.mp3');
 
 for (let c of [sky, traces, terrain, foreground]) {
   c.canvas.style.width = `${W * Z}px`;
