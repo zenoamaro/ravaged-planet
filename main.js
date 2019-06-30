@@ -55,6 +55,7 @@ for (let [color, borderColor] of PLAYER_COLORS) {
       {type: 'smallDigBomb', ammo:5},
       {type: 'digBomb', ammo:3},
       {type: 'largeDigBomb', ammo:1},
+      {type: 'tracer', ammo:Infinity},
     ],
     currentWeapon: 0,
     energy: PLAYER_MAX_ENERGY,

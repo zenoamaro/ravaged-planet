@@ -13,6 +13,7 @@ export function drawDirt(ctx, x, y, r, c) {
 }
 
 export const WEAPON_TYPES = [
+  {id:'tracer', name:'Tracer', explosion:{type:'tracer'}},
   {id:'babyMissile', name:'Baby Missile', explosion:{type:'blast', r:5}},
   {id:'missile', name:'Missile', explosion:{type:'blast', r:20}},
   {id:'babyNuke', name:'Baby Nuke', explosion:{type:'blast', r:50}},
@@ -41,6 +42,16 @@ export const DEATH_SPECS = [
 ];
 
 export const EXPLOSION_TYPES = {
+  tracer: {
+    create(spec, x, y) {
+      return {type:'tracer'};
+    },
+    update(explosion) {},
+    draw(explosion, foreground) {},
+    stop(explosion) {},
+    clip(explosion, terrain) {},
+    damage(explosion, player) {}
+  },
   blast: {
     create(spec, x, y) {
       const {r} = spec;
