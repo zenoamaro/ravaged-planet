@@ -29,8 +29,8 @@ const TERRAIN_TYPES = {
     for (let x=0; x<width; x++) {
       if (x % stepSize === 0) dy = ((random(.3, .7) * height) - cy) / stepSize;
       if (x % (stepSize/16) === 0) dy = dy - random(-1, 1);
-      const ty = clamp(0, cy + dy, height);
-      const wy = clamp(70, ty, height-70);
+      const ty = clamp(0, cy+dy, height-1);
+      const wy = clamp(70, ty, height-70-1);
       cy = wy + (ty-wy) * 0.5;
       drawRect(ctx, x, cy, 1, height-cy, ctx.color);
     }

@@ -79,7 +79,7 @@ function update() {
       let ai = AI_TYPES[player.ai];
       const plan = ai.decide();
       const a = player.a = wrap(0, plan.a, 180);
-      const p = player.p = wrap(0, plan.p, maxPower);
+      const p = player.p = clamp(0, plan.p, maxPower);
       shoot = {a, p};
     }
 
@@ -366,7 +366,7 @@ function drawTrajectories() {
 
 function drawProjectile() {
   if (!projectile) return;
-  plot(foreground, clamp(0, projectile.x, W), clamp(0, projectile.y, H), 'white');
+  plot(foreground, clamp(0, projectile.x, W-1), clamp(0, projectile.y, H-1), 'white');
 }
 
 function fadeTrajectories(amount) {
