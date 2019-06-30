@@ -36,13 +36,13 @@ for (let c of [sky, traces, terrain, foreground]) {
 
 // Init players
 let i=0;
-for (let color of PLAYER_COLORS) {
+for (let [color, borderColor] of PLAYER_COLORS) {
   const x = 50 + (W-100) / 5 * i;
   const y = landHeight(terrain, x) + 1;
   const a = x > W/2 ? 45 : 180-45;
   players.push({
     x, y, a,
-    c: color,
+    c: color, cb: borderColor,
     p: PLAYER_INITIAL_POWER,
     weapons: [
       {type: 'babyMissile', ammo:Infinity},
@@ -334,9 +334,16 @@ function draw() {
 
 function drawPlayers() {
   for (let player of players) {
-    const {x, y, a, c, dead} = player;
+    const {x, y, a, c, cb, dead} = player;
     if (dead) continue;
     const [px, py] = vec(x, y-3, a+180, 3);
+    drawLine(foreground, x-1, y-3, px-1, py, cb);
+    drawLine(foreground, x+1, y-3, px+1, py, cb);
+    drawLine(foreground, x, y-4, px, py-1, cb);
+    drawRect(foreground, x-4, y-3, 8, 1, cb);
+    drawRect(foreground, x-5, y-2, 10, 2, cb);
+    drawRect(foreground, x-4, y-0, 8, 1, cb);
+    drawRect(foreground, x-3, y+1, 6, 1, cb);
     drawLine(foreground, x, y-3, px, py, c);
     drawRect(foreground, x-4, y-2, 8, 2, c);
     drawRect(foreground, x-3, y-0, 6, 1, c);

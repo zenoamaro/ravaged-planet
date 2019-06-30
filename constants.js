@@ -5,12 +5,12 @@ export const Z = 2;
 export const MAX_PLAYERS = 6;
 
 export const PLAYER_COLORS = [
-  'tomato',
-  'royalblue',
-  'greenyellow',
-  'gold',
-  'hotpink',
-  'darkorchid',
+  ['tomato', 'darkred'],
+  ['royalblue', 'darkblue'],
+  ['greenyellow', 'green'],
+  ['gold', 'peru'],
+  ['hotpink', 'mediumvioletred'],
+  ['blueviolet', 'indigo'],
 ];
 
 export const SKY_COLORS = [
