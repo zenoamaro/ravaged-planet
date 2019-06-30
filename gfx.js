@@ -1,5 +1,6 @@
 import {splitWords} from './utils.js';
 import {parable} from './math.js';
+import {FONT_HEIGHT, FONT_WIDTH} from './constants.js';
 
 export function createCanvas(width, height) {
   const canvas = document.createElement('canvas');
@@ -87,12 +88,25 @@ export function drawCircle(ctx, x, y, r, color) {
 export function drawText(ctx, text, x, y, color, align='left', baseline='top') {
   x = Math.round(x); y = Math.round(y);
   ctx.font = '5px text';
-  ctx.textBaseline = baseline;
-  ctx.textAlign = align;
+  ctx.textBaseline = 'top';
+  ctx.textAlign = 'left';
   ctx.fillStyle = color;
   ctx.strokeStyle = 'black';
-  ctx.strokeText(text, x, y);
-  ctx.fillText(text, x, y);
+  const length = (text.length * FONT_WIDTH) + (text.length -1);
+  const left = (
+    align === 'right' ? x - length :
+    align === 'center' ? x - Math.round(length /2) :
+    x
+  );
+  const top = (
+    baseline === 'bottom' ? y - FONT_HEIGHT :
+    baseline === 'middle' ? y - Math.round(FONT_HEIGHT /2) :
+    y
+  );
+  for (let i=0; i<text.length; i++) {
+    ctx.strokeText(text[i], left + i*FONT_WIDTH + i, top);
+    ctx.fillText(text[i], left + i*FONT_WIDTH + i, top);
+  }
 }
 
 export function drawParagraph(ctx, text, x, y, w, h, color) {

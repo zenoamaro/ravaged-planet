@@ -52,3 +52,6 @@ export const PARTICLE_FADE_AMOUNT = 1;
 
 export const MAX_EXPLOSION_SHAKE_FACTOR = 60;
 export const EXPLOSION_SHAKE_REDUCTION_FACTOR = 7;
+
+export const FONT_WIDTH = 3;
+export const FONT_HEIGHT = 5;
