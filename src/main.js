@@ -132,7 +132,7 @@ function update() {
       weaponType.ammo -= 1;
 
       projectile = {
-        osc: createOsc(),
+        osc: createOsc('sine'),
         player: player,
         weaponTypeId: weaponType.type,
         ox:px, oy:py, a, p,

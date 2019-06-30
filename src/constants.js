@@ -105,3 +105,6 @@ export const EXPLOSION_SHAKE_REDUCTION_FACTOR = 7;
 
 export const FONT_WIDTH = 3;
 export const FONT_HEIGHT = 5;
+
+export const SOUND_MUSIC_VOLUME = 0.3;
+export const SOUND_SFX_VOLUME = 0.05;
