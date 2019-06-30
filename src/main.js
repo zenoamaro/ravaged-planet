@@ -47,7 +47,7 @@ for (let [color, borderColor] of PLAYER_COLORS) {
     weapons: [...PLAYER_STARTING_WEAPONS],
     currentWeapon: 0,
     energy: PLAYER_MAX_ENERGY,
-    ai: i !== 0 ? 'moron' : undefined,
+    ai: i !== 0 ? sample(Object.keys(AI_TYPES)) : undefined,
     fallHeight: 0,
     dead: false,
   });
@@ -71,7 +71,7 @@ function update() {
 
   else if (state === 'aim') {
     const player = players[currentPlayer];
-    const {x, y, a, p, energy} = player;
+    const {x, y, a, p, weapons, energy} = player;
     const maxPower = energy * PLAYER_ENERGY_POWER_MULTIPLIER;
     const isPrecise = key('Alt');
     const isFast = key('Shift');
@@ -80,10 +80,11 @@ function update() {
 
     if (player.ai) {
       let ai = AI_TYPES[player.ai];
-      const plan = ai.decide();
-      const a = player.a = wrap(0, plan.a, 180);
-      const p = player.p = clamp(0, plan.p, maxPower);
-      shoot = {a, p};
+      const plan = ai.decide(player);
+      player.a = wrap(0, plan.a, 180);
+      player.p = clamp(0, plan.p, maxPower);
+      player.currentWeapon = clamp(0, plan.currentWeapon, weapons.length-1);
+      shoot = true;
     }
 
     else if (key('ArrowLeft')) {
@@ -125,19 +126,20 @@ function update() {
     }
 
     if (shoot) {
-      const {a, p} = shoot;
+      const {a, p, c, weapons, currentWeapon} = player;
       const [px, py] = vec(x, y-3, a+180, 5);
 
-      const weaponType = player.weapons[player.currentWeapon];
+      const weaponType = weapons[currentWeapon];
       weaponType.ammo -= 1;
 
       projectile = {
         osc: createOsc('sine'),
         player: player,
         weaponTypeId: weaponType.type,
-        ox:px, oy:py, a, p,
-        x:px, y:py, t: 0,
-        c: player.c
+        ox: px, oy: py,
+        x: px, y: py,
+        a, p, c,
+        t: 0,
       };
 
       projectile.osc.start();

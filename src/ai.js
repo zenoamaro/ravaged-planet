@@ -4,11 +4,23 @@ import {randomInt} from './math.js';
 export const AI_TYPES = {
 
   moron: {
-    decide() {
+    decide(player) {
       return {
         a: randomInt(0, 180),
-        p: randomInt(PLAYER_INITIAL_POWER, PLAYER_MAX_ENERGY*PLAYER_ENERGY_POWER_MULTIPLIER)}
-    }
+        p: randomInt(PLAYER_INITIAL_POWER, PLAYER_MAX_ENERGY*PLAYER_ENERGY_POWER_MULTIPLIER),
+        currentWeapon: player.currentWeapon,
+      };
+    },
+  },
+
+  chooser: {
+    decide(player) {
+      return {
+        a: randomInt(0, 180),
+        p: randomInt(PLAYER_INITIAL_POWER, PLAYER_MAX_ENERGY*PLAYER_ENERGY_POWER_MULTIPLIER),
+        currentWeapon: randomInt(0, player.weapons.length-1),
+      };
+    },
   },
 
 };
