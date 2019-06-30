@@ -160,7 +160,8 @@ function update() {
         const explosionSpec = weapon.explosion;
         const explosionType = EXPLOSION_TYPES[explosionSpec.type];
         explosion = explosionType.create(explosionSpec, projectile.x, projectile.y);
-        createParticles(projectile.x, projectile.y, projectile.p);
+        // @ts-ignore: canvas color hack
+        createParticles(projectile.x, projectile.y, projectile.p, terrain.color);
         state = 'explosion';
         break;
       }
@@ -228,11 +229,11 @@ function update() {
     const dyingPlayer = players.find(x => x.energy<=0 && !x.dead);
     if (!dyingPlayer) {state = 'end-turn'; return}
 
-    const {x, y} = dyingPlayer;
+    const {x, y, c} = dyingPlayer;
     const explosionSpec = sample(DEATH_SPECS);
     const explosionType = EXPLOSION_TYPES[explosionSpec.type];
     explosion = explosionType.create(explosionSpec, x, y);
-    createParticles(x, y, PLAYER_EXPLOSION_PARTICLE_POWER);
+    createParticles(x, y, PLAYER_EXPLOSION_PARTICLE_POWER, c);
     dyingPlayer.dead = true;
     state = 'explosion';
   }
@@ -276,17 +277,16 @@ function update() {
   }
 }
 
-function createParticles(x, y, p) {
+function createParticles(x, y, p, c) {
   for (let i = 0; i < PARTICLE_AMOUNT; i++) {
     particles.push({
+      t: 0,
       ox: x, x: x,
       oy: y, y: y,
-      p: p * random(PARTICLE_MIN_POWER_FACTOR, PARTICLE_MAX_POWER_FACTOR),
       a: randomInt(0, 359),
-      t: 0,
+      p: p * random(PARTICLE_MIN_POWER_FACTOR, PARTICLE_MAX_POWER_FACTOR),
       // @ts-ignore: canvas color hack
-      c: terrain.color,
-      alpha: 255,
+      c, alpha: 255,
     });
   }
 }
