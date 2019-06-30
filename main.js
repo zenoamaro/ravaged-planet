@@ -1,6 +1,6 @@
-import {H, PROJECTILE_MAX_SOUND_FREQUENCY, MAX_WIND, PROJECTILE_MIN_SOUND_FREQUENCY, PLAYER_COLORS, PLAYER_INITIAL_POWER, PROJECTILE_POWER_REDUCTION_FACTOR, W, Z, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS, PLAYER_MAX_ENERGY, PLAYER_ENERGY_POWER_MULTIPLIER, PLAYER_FALL_DAMAGE_FACTOR, PLAYER_FALL_DAMAGE_HEIGHT, PLAYER_WEAPON_CHANGE_DELAY, PARTICLE_AMOUNT, PROJECTILE_WIND_REDUCTION_FACTOR, PARTICLE_POWER_REDUCTION_FACTOR, PARTICLE_WIND_REDUCTION_FACTOR, PARTICLE_MIN_POWER_FACTOR, PARTICLE_MAX_POWER_FACTOR, PARTICLE_MIN_LIFETIME, PARTICLE_TIME_FACTOR, PLAYER_EXPLOSION_PARTICLE_POWER, EXPLOSION_SHAKE_REDUCTION_FACTOR, MAX_EXPLOSION_SHAKE_FACTOR, TRAJECTORY_FADE_SPEED, PARTICLE_FADE_AMOUNT, TRAJECTORY_FLOAT_SPEED, PLAYER_TANK_BOUNDING_RADIUS, PLAYER_STARTING_WEAPONS, WEAPON_TYPES, DEATH_SPECS} from './constants.js';
+import {H, PROJECTILE_MAX_SOUND_FREQUENCY, MAX_WIND, PROJECTILE_MIN_SOUND_FREQUENCY, PLAYER_COLORS, PLAYER_INITIAL_POWER, PROJECTILE_POWER_REDUCTION_FACTOR, W, Z, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS, PLAYER_MAX_ENERGY, PLAYER_ENERGY_POWER_MULTIPLIER, PLAYER_FALL_DAMAGE_FACTOR, PLAYER_FALL_DAMAGE_HEIGHT, PARTICLE_AMOUNT, PROJECTILE_WIND_REDUCTION_FACTOR, PARTICLE_POWER_REDUCTION_FACTOR, PARTICLE_WIND_REDUCTION_FACTOR, PARTICLE_MIN_POWER_FACTOR, PARTICLE_MAX_POWER_FACTOR, PARTICLE_MIN_LIFETIME, PARTICLE_TIME_FACTOR, PLAYER_EXPLOSION_PARTICLE_POWER, EXPLOSION_SHAKE_REDUCTION_FACTOR, MAX_EXPLOSION_SHAKE_FACTOR, TRAJECTORY_FADE_SPEED, PARTICLE_FADE_AMOUNT, TRAJECTORY_FLOAT_SPEED, PLAYER_TANK_BOUNDING_RADIUS, PLAYER_STARTING_WEAPONS, WEAPON_TYPES, DEATH_SPECS, PLAYER_ANGLE_INCREMENT, PLAYER_POWER_FAST_INCREMENT, PLAYER_POWER_INCREMENT, PLAYER_ANGLE_TICK_SOUND_INTERVAL, PLAYER_POWER_TICK_SOUND_INTERVAL, PLAYER_ANGLE_FAST_INCREMENT} from './constants.js';
 import {createCanvas, drawLine, drawRect, drawText, loop, plot, drawLineVirtual} from './gfx.js';
-import {key} from './input.js';
+import {key, afterKeyDelay} from './input.js';
 import {clamp, deg2rad, parable, randomInt, vec, wrap, random, within} from './math.js';
 import {createSky} from './sky.js';
 import {audio, createOsc, playTickSound} from './sound.js';
@@ -10,17 +10,16 @@ import {sample} from './utils.js';
 import {AI_TYPES} from './ai.js';
 
 
-let idle = false;
 let state = 'start-game';
 const players = [];
 let currentPlayer = 0;
 let projectile = null;
 let explosion = null;
 let wind = 0;
-let lastWeaponChangeTime = 0;
 let particles = [];
 let screenShake = 0;
 let trajectories = [];
+let idle = false;
 
 // Init layers
 const sky = createSky(W, H);
@@ -73,6 +72,9 @@ function update() {
     const player = players[currentPlayer];
     const {x, y, a, p, energy} = player;
     const maxPower = energy * PLAYER_ENERGY_POWER_MULTIPLIER;
+    const isPrecise = key('Alt');
+    const isFast = key('Shift');
+    const isReverse = key('Shift');
     let shoot;
 
     if (player.ai) {
@@ -84,24 +86,39 @@ function update() {
     }
 
     else if (key('ArrowLeft')) {
-      player.a = wrap(0, a -1, 180);
-      if (a % 2 === 0) playTickSound();
+      if (isPrecise && !afterKeyDelay()) return;
+      let incr = isFast ? PLAYER_ANGLE_FAST_INCREMENT : PLAYER_ANGLE_INCREMENT;
+      player.a = wrap(0, a -incr, 180);
+      if (isPrecise || isFast || a % PLAYER_ANGLE_TICK_SOUND_INTERVAL === 0) playTickSound();
+
     } else if (key('ArrowRight')) {
-      player.a = wrap(0, a +1, 180);
-      if (a % 2 === 0) playTickSound();
+      if (isPrecise && !afterKeyDelay()) return;
+      let incr = isFast ? PLAYER_ANGLE_FAST_INCREMENT : PLAYER_ANGLE_INCREMENT;
+      player.a = wrap(0, a +incr, 180);
+      if (isPrecise || isFast || a % PLAYER_ANGLE_TICK_SOUND_INTERVAL === 0) playTickSound();
+
     } else if (key('ArrowUp')) {
-      player.p = clamp(0, p +2, maxPower);
-      if (p < maxPower && p % 4 === 0) playTickSound();
+      if (isPrecise && !afterKeyDelay()) return;
+      let incr = isFast ? PLAYER_POWER_FAST_INCREMENT : PLAYER_POWER_INCREMENT;
+      player.p = clamp(0, p +incr, maxPower);
+      if (p < maxPower && (isPrecise || isFast || p % PLAYER_POWER_TICK_SOUND_INTERVAL === 0)) playTickSound();
+
     } else if (key('ArrowDown')) {
-      player.p = clamp(0, p -2, maxPower);
-      if (p > 0 && p % 4 === 0) playTickSound();
+      if (isPrecise && !afterKeyDelay()) return;
+      let incr = isFast ? PLAYER_POWER_FAST_INCREMENT : PLAYER_POWER_INCREMENT;
+      player.p = clamp(0, p -incr, maxPower);
+      if (p > 0 && (isPrecise || isFast || p % PLAYER_POWER_TICK_SOUND_INTERVAL === 0)) playTickSound();
+
     } else if (key('Tab')) {
-      if (Date.now() - lastWeaponChangeTime < PLAYER_WEAPON_CHANGE_DELAY) return;
-      player.currentWeapon = wrap(0, player.currentWeapon+1, player.weapons.length);
-      lastWeaponChangeTime = Date.now();
+      if (!afterKeyDelay()) return;
+      const dir = isReverse ? -1 : 1;
+      player.currentWeapon = wrap(0, player.currentWeapon+dir, player.weapons.length);
       playTickSound();
+
     } else if (key(' ')) {
+      if (!afterKeyDelay()) return;
       shoot = {a, p};
+
     } else {
       idle = true;
     }
