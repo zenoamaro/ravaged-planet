@@ -39,7 +39,7 @@ const TERRAIN_TYPES = {
   },
 
   sand(ctx) {
-    ctx.color = 'burlywood'; // FIXME
+    ctx.color = 'wheat';
     const {width, height} = ctx.canvas;
     const stepCount = 16;
     const stepSize = width / stepCount;

@@ -13,6 +13,15 @@ export const PLAYER_COLORS = [
   'darkorchid',
 ];
 
+export const SKY_COLORS = [
+  {from:[42, 78, 108], to:[0, 0, 0]},
+  {from:[82, 120, 187], to:[201, 218, 236]},
+  {from:[94, 171, 184], to:[225, 172, 139]},
+  {from:[49, 76, 148], to:[242, 171, 85]},
+  {from:[51, 89, 135], to:[163, 198, 220]},
+  {from:[105, 95, 108], to:[223, 183, 110]},
+];
+
 export const MAX_WIND = 25;
 
 export const PLAYER_MAX_ENERGY = 100;

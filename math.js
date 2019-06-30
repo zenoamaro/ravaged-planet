@@ -11,6 +11,10 @@ export function coords2index(width, x, y) {
   return y * width + x;
 }
 
+export function gradient(from, to, i) {
+  return from + (to-from) * i;
+}
+
 export function random(min, max) {
   return min + Math.random() * (max-min);
 }
