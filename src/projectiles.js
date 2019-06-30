@@ -13,17 +13,17 @@ export const PROJECTILE_TYPES = {
       const osc = createOsc('sine');
       osc.start();
 
-      return {
+      return [{
         type: 'normal',
         player, weapon,
         x:ox, y:oy, ox, oy, a, p,
         t: 0, osc, wind,
-      };
+      }];
     },
     stop(projectile) {
       projectile.osc.stop(0);
     },
-    update(projectile, terrain, trajectories, explosions) {
+    update(projectile, terrain, projectiles, trajectories, explosions) {
       const prevProjectile = {...projectile};
       const {weapon, player, wind} = projectile;
       const weaponType = WEAPON_TYPES[weapon.type];
@@ -75,5 +75,25 @@ export const PROJECTILE_TYPES = {
 
       return !exploded;
     },
-  }
+  },
+
+  mirv: {
+    create(spec, player, weapon, ox, oy, a, p, wind) {
+      const {n, s} = spec;
+      const projectiles = [];
+      const normalType = PROJECTILE_TYPES.normal;
+
+      for (let i=0; i<n; i++) {
+        projectiles.push(
+          normalType.create(
+            {}, player, weapon, ox, oy, a, p, wind-s*i
+          )[0]
+        );
+      }
+
+      return projectiles;
+    },
+    stop() {},
+    update() {},
+  },
 }

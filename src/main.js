@@ -140,9 +140,8 @@ function update() {
       const projectileType = PROJECTILE_TYPES[projectile.type];
       weapon.ammo -= 1;
 
-      projectiles.push(
-        projectileType.create(projectile, player, weapon, px, py, a, p, wind)
-      );
+      projectileType.create(projectile, player, weapon, px, py, a, p, wind)
+        .forEach(x => projectiles.push(x));
 
       state = 'shoot';
     }
@@ -152,7 +151,7 @@ function update() {
     for (let i=projectiles.length-1; i>=0; i--) {
       const projectile = projectiles[i];
       const projectileType = PROJECTILE_TYPES[projectile.type];
-      if (projectileType.update(projectile, terrain, trajectories, explosions)) continue;
+      if (projectileType.update(projectile, terrain, projectiles, trajectories, explosions)) continue;
       projectileType.stop(projectile);
       projectiles.splice(i, 1);
     }
