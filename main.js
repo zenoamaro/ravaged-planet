@@ -1,4 +1,4 @@
-import {H, PROJECTILE_MAX_SOUND_FREQUENCY, MAX_WIND, PROJECTILE_MIN_SOUND_FREQUENCY, PLAYER_COLORS, PLAYER_INITIAL_POWER, PROJECTILE_POWER_REDUCTION_FACTOR, W, Z, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS, PLAYER_MAX_ENERGY, PLAYER_ENERGY_POWER_MULTIPLIER, PLAYER_FALL_DAMAGE_FACTOR, PLAYER_FALL_DAMAGE_HEIGHT, PLAYER_WEAPON_CHANGE_DELAY, PARTICLE_AMOUNT, PROJECTILE_WIND_REDUCTION_FACTOR, PARTICLE_POWER_REDUCTION_FACTOR, PARTICLE_WIND_REDUCTION_FACTOR, PARTICLE_MIN_POWER_FACTOR, PARTICLE_MAX_POWER_FACTOR, PARTICLE_MIN_LIFETIME, PARTICLE_TIME_FACTOR, PLAYER_EXPLOSION_PARTICLE_POWER, EXPLOSION_SHAKE_REDUCTION_FACTOR, MAX_EXPLOSION_SHAKE_FACTOR, TRAJECTORY_FADE_SPEED} from './constants.js';
+import {H, PROJECTILE_MAX_SOUND_FREQUENCY, MAX_WIND, PROJECTILE_MIN_SOUND_FREQUENCY, PLAYER_COLORS, PLAYER_INITIAL_POWER, PROJECTILE_POWER_REDUCTION_FACTOR, W, Z, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS, PLAYER_MAX_ENERGY, PLAYER_ENERGY_POWER_MULTIPLIER, PLAYER_FALL_DAMAGE_FACTOR, PLAYER_FALL_DAMAGE_HEIGHT, PLAYER_WEAPON_CHANGE_DELAY, PARTICLE_AMOUNT, PROJECTILE_WIND_REDUCTION_FACTOR, PARTICLE_POWER_REDUCTION_FACTOR, PARTICLE_WIND_REDUCTION_FACTOR, PARTICLE_MIN_POWER_FACTOR, PARTICLE_MAX_POWER_FACTOR, PARTICLE_MIN_LIFETIME, PARTICLE_TIME_FACTOR, PLAYER_EXPLOSION_PARTICLE_POWER, EXPLOSION_SHAKE_REDUCTION_FACTOR, MAX_EXPLOSION_SHAKE_FACTOR, TRAJECTORY_FADE_SPEED, PARTICLE_FADE_AMOUNT, TRAJECTORY_FLOAT_SPEED} from './constants.js';
 import {createCanvas, drawLine, drawRect, drawText, loop, plot, drawLineVirtual} from './gfx.js';
 import {key} from './input.js';
 import {clamp, deg2rad, parable, randomInt, vec, wrap, random} from './math.js';
@@ -286,6 +286,7 @@ function createParticles(x, y, p) {
       t: 0,
       // @ts-ignore: canvas color hack
       c: terrain.color,
+      alpha: 255,
     });
   }
 }
@@ -296,6 +297,7 @@ function updateParticles() {
 
     if (
       particle.y > H ||
+      particle.alpha <= 0 ||
       particle.t > PARTICLE_MIN_LIFETIME && isTerrain(terrain, particle.x, particle.y)
     ) {
       particles.splice(i, 1);
@@ -303,6 +305,7 @@ function updateParticles() {
     }
 
     const {ox, oy, t, a, p} = particle;
+
     const [tx, ty] = parable(
       t / PARTICLE_TIME_FACTOR,
       ox, oy, deg2rad(180+a),
@@ -313,6 +316,7 @@ function updateParticles() {
     particle.t++;
     particle.x = tx;
     particle.y = ty;
+    particle.alpha -= PARTICLE_FADE_AMOUNT;
   }
 }
 
@@ -356,6 +360,7 @@ function drawProjectile() {
 function fadeTrajectories(amount) {
   for (let trajectory of trajectories) {
     trajectory.a -= amount;
+    trajectory.y -= TRAJECTORY_FLOAT_SPEED;
   }
   trajectories = trajectories.filter(x => x.a > 0);
 }
@@ -368,8 +373,10 @@ function drawExplosions() {
 
 function drawParticles() {
   for (let particle of particles) {
+    foreground.globalAlpha = clamp(0, particle.alpha / 255, 255);
     plot(foreground, particle.x, particle.y, particle.c);
   }
+  foreground.globalAlpha = 1;
 }
 
 function drawScreenShake() {
