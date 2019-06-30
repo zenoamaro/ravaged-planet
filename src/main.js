@@ -115,7 +115,7 @@ function update() {
     } else if (key('Tab')) {
       if (!afterKeyDelay()) return;
       const dir = isReverse ? -1 : 1;
-      player.currentWeapon = wrap(0, player.currentWeapon+dir, player.weapons.length);
+      player.currentWeapon = wrap(0, player.currentWeapon+dir, player.weapons.length-1);
       playTickSound();
 
     } else if (key(' ')) {
@@ -264,13 +264,13 @@ function update() {
       player.weapons = player.weapons.filter(x => x !== weaponType);
     }
 
-    player.currentWeapon = wrap(0, player.currentWeapon, player.weapons.length);
+    player.currentWeapon = wrap(0, player.currentWeapon, player.weapons.length-1);
     player.fallHeight = 0;
 
     let nextPlayer;
 
     for (let p=0; p<players.length; p++) {
-      const i = wrap(0, currentPlayer+p+1, players.length);
+      const i = wrap(0, currentPlayer+p+1, players.length-1);
       if (!players[i].dead) {nextPlayer = i; break}
     }
 

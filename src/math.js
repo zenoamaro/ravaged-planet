@@ -28,7 +28,7 @@ export function clamp(min, x, max) {
 }
 
 export function wrap(min, x, max) {
-  return ((x-min + max-min) % (max-min)) + min;
+  return ((x-min + max+1-min) % (max+1-min)) + min;
 }
 
 export function cycle(x, d) {
