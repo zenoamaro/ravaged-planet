@@ -262,11 +262,11 @@ function update() {
   }
 
   else if (state === 'player-win') {
-    //
+    idle = true;
   }
 
   else if (state === 'game-over') {
-    //
+    idle = true;
   }
 
   else {
