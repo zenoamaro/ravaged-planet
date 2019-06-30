@@ -1,13 +1,13 @@
-import {H, PROJECTILE_MAX_SOUND_FREQUENCY, MAX_WIND, PROJECTILE_MIN_SOUND_FREQUENCY, PLAYER_COLORS, PLAYER_INITIAL_POWER, PROJECTILE_POWER_REDUCTION_FACTOR, W, Z, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS, PLAYER_MAX_ENERGY, PLAYER_ENERGY_POWER_MULTIPLIER, PLAYER_FALL_DAMAGE_FACTOR, PLAYER_FALL_DAMAGE_HEIGHT, PARTICLE_AMOUNT, PROJECTILE_WIND_REDUCTION_FACTOR, PARTICLE_POWER_REDUCTION_FACTOR, PARTICLE_WIND_REDUCTION_FACTOR, PARTICLE_MIN_POWER_FACTOR, PARTICLE_MAX_POWER_FACTOR, PARTICLE_MIN_LIFETIME, PARTICLE_TIME_FACTOR, PLAYER_EXPLOSION_PARTICLE_POWER, EXPLOSION_SHAKE_REDUCTION_FACTOR, MAX_EXPLOSION_SHAKE_FACTOR, TRAJECTORY_FADE_SPEED, PARTICLE_FADE_AMOUNT, TRAJECTORY_FLOAT_SPEED, PLAYER_TANK_BOUNDING_RADIUS, PLAYER_STARTING_WEAPONS, WEAPON_TYPES, DEATH_SPECS, PLAYER_ANGLE_INCREMENT, PLAYER_POWER_FAST_INCREMENT, PLAYER_POWER_INCREMENT, PLAYER_ANGLE_TICK_SOUND_INTERVAL, PLAYER_POWER_TICK_SOUND_INTERVAL, PLAYER_ANGLE_FAST_INCREMENT} from './constants.js';
-import {createCanvas, drawLine, drawRect, drawText, loop, plot, drawLineVirtual} from './gfx.js';
-import {key, afterKeyDelay} from './input.js';
-import {clamp, deg2rad, parable, randomInt, vec, wrap, random, within} from './math.js';
-import {createSky} from './sky.js';
-import {audio, createOsc, playTickSound, createAudioLoop} from './sound.js';
-import {collapseTerrain, createTerrain, isTerrain, landHeight, closestLand, clipTerrain} from './terrain.js';
-import {EXPLOSION_TYPES} from './weapons.js';
-import {sample} from './utils.js';
 import {AI_TYPES} from './ai.js';
+import {DEATH_SPECS, EXPLOSION_SHAKE_REDUCTION_FACTOR, H, MAX_EXPLOSION_SHAKE_FACTOR, MAX_WIND, PARTICLE_AMOUNT, PARTICLE_FADE_AMOUNT, PARTICLE_MAX_POWER_FACTOR, PARTICLE_MIN_LIFETIME, PARTICLE_MIN_POWER_FACTOR, PARTICLE_POWER_REDUCTION_FACTOR, PARTICLE_TIME_FACTOR, PARTICLE_WIND_REDUCTION_FACTOR, PLAYER_ANGLE_FAST_INCREMENT, PLAYER_ANGLE_INCREMENT, PLAYER_ANGLE_TICK_SOUND_INTERVAL, PLAYER_COLORS, PLAYER_ENERGY_POWER_MULTIPLIER, PLAYER_EXPLOSION_PARTICLE_POWER, PLAYER_FALL_DAMAGE_FACTOR, PLAYER_FALL_DAMAGE_HEIGHT, PLAYER_INITIAL_POWER, PLAYER_MAX_ENERGY, PLAYER_POWER_FAST_INCREMENT, PLAYER_POWER_INCREMENT, PLAYER_POWER_TICK_SOUND_INTERVAL, PLAYER_STARTING_WEAPONS, PLAYER_TANK_BOUNDING_RADIUS, PLAYER_TANK_Y_FOOTPRINT, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS, PROJECTILE_MAX_SOUND_FREQUENCY, PROJECTILE_MIN_SOUND_FREQUENCY, PROJECTILE_POWER_REDUCTION_FACTOR, PROJECTILE_WIND_REDUCTION_FACTOR, TRAJECTORY_FADE_SPEED, TRAJECTORY_FLOAT_SPEED, W, WEAPON_TYPES, Z} from './constants.js';
+import {createCanvas, drawLine, drawLineVirtual, drawRect, drawText, loop, plot} from './gfx.js';
+import {afterKeyDelay, key} from './input.js';
+import {clamp, deg2rad, distance, parable, random, randomInt, vec, wrap} from './math.js';
+import {createSky} from './sky.js';
+import {audio, createOsc, playTickSound} from './sound.js';
+import {clipTerrain, closestLand, collapseTerrain, createTerrain, isTerrain, landHeight} from './terrain.js';
+import {sample} from './utils.js';
+import {EXPLOSION_TYPES} from './weapons.js';
 
 
 let state = 'start-game';
@@ -341,7 +341,11 @@ function updateParticles() {
 function isTank(x, y) {
   for (let player of players) {
     if (player.dead) continue;
-    if (within(x, y, player.x, player.y, PLAYER_TANK_BOUNDING_RADIUS)) {
+
+    if (
+      distance(x, y, player.x, player.y+PLAYER_TANK_Y_FOOTPRINT) <=
+      PLAYER_TANK_BOUNDING_RADIUS
+    ) {
       return true;
     }
   }

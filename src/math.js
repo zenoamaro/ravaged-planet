@@ -5,8 +5,7 @@ export function index2coords(width, i) {
 }
 
 export function coords2index(width, x, y) {
-  x = Math.round(x);
-  y = Math.round(y);
+  x = Math.round(x); y = Math.round(y);
   width = Math.round(width);
   return y * width + x;
 }
@@ -35,8 +34,15 @@ export function cycle(x, d) {
   return Math.floor(x / d);
 }
 
-export function within(x, y, tx, ty, r) {
-  return Math.abs(x-tx) < r && Math.abs(y-ty) < r;
+export function diagonal(a, b) {
+  return Math.sqrt(a**2 + b**2);
+}
+
+export function distance(x1, y1, x2, y2) {
+  return diagonal(
+    Math.abs(x2-x1),
+    Math.abs(y2-y1),
+  );
 }
 
 export function parable(t, x, y, a, v, w=0, g=9.8) {

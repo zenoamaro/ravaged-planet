@@ -1,8 +1,8 @@
+import {PLAYER_TANK_BOUNDING_RADIUS, PLAYER_TANK_Y_FOOTPRINT} from './constants.js';
 import {drawCircle, plot} from './gfx.js';
+import {clamp, cycle, distance, randomInt} from './math.js';
+import {audio, createOsc} from './sound.js';
 import {clipTerrain} from './terrain.js';
-import {within, cycle, random, randomInt} from './math.js';
-import {createOsc, audio} from './sound.js';
-import {PLAYER_TANK_BOUNDING_RADIUS} from './constants.js';
 
 export function drawExplosion(ctx, x, y, r) {
   const color = 255 - (16 * (r % 16));
@@ -49,13 +49,11 @@ export const EXPLOSION_TYPES = {
       clipTerrain(terrain, (ctx) => drawExplosion(ctx, x, y, cr));
     },
     damage(explosion, player) {
-      if (within(explosion.x, explosion.y, player.x, player.y, explosion.r)) {
-        return 100;
-      } else if (
-        within(explosion.x, explosion.y, player.x-PLAYER_TANK_BOUNDING_RADIUS, player.y, explosion.r) ||
-        within(explosion.x, explosion.y, player.x+PLAYER_TANK_BOUNDING_RADIUS, player.y, explosion.r)
-      ) {
-        return 50;
+      const {x, y, r} = explosion;
+      const dist = distance(x, y, player.x, player.y+PLAYER_TANK_Y_FOOTPRINT);
+      const tolerance = clamp(0, dist - r, Infinity);
+      if (tolerance <= PLAYER_TANK_BOUNDING_RADIUS) {
+        return Math.round(100 * (1 - tolerance / (PLAYER_TANK_BOUNDING_RADIUS+1)));
       }
     }
   },
