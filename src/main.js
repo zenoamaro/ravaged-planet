@@ -1,10 +1,11 @@
 import {AI_TYPES} from './ai.js';
-import {DEATH_SPECS, EXPLOSION_SHAKE_REDUCTION_FACTOR, H, MAX_EXPLOSION_SHAKE_FACTOR, MAX_WIND, PARTICLE_AMOUNT, PARTICLE_FADE_AMOUNT, PARTICLE_MAX_POWER_FACTOR, PARTICLE_MIN_LIFETIME, PARTICLE_MIN_POWER_FACTOR, PARTICLE_POWER_REDUCTION_FACTOR, PARTICLE_TIME_FACTOR, PARTICLE_WIND_REDUCTION_FACTOR, PLAYER_ANGLE_FAST_INCREMENT, PLAYER_ANGLE_INCREMENT, PLAYER_ANGLE_TICK_SOUND_INTERVAL, PLAYER_COLORS, PLAYER_ENERGY_POWER_MULTIPLIER, PLAYER_EXPLOSION_PARTICLE_POWER, PLAYER_FALL_DAMAGE_FACTOR, PLAYER_FALL_DAMAGE_HEIGHT, PLAYER_INITIAL_POWER, PLAYER_MAX_ENERGY, PLAYER_POWER_FAST_INCREMENT, PLAYER_POWER_INCREMENT, PLAYER_POWER_TICK_SOUND_INTERVAL, PLAYER_STARTING_WEAPONS, PLAYER_TANK_BOUNDING_RADIUS, PLAYER_TANK_Y_FOOTPRINT, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS, PROJECTILE_MAX_SOUND_FREQUENCY, PROJECTILE_MIN_SOUND_FREQUENCY, PROJECTILE_POWER_REDUCTION_FACTOR, PROJECTILE_WIND_REDUCTION_FACTOR, TRAJECTORY_FADE_SPEED, TRAJECTORY_FLOAT_SPEED, W, WEAPON_TYPES, Z} from './constants.js';
-import {createCanvas, drawLine, drawLineVirtual, drawRect, drawText, loop, plot} from './gfx.js';
+import {DEATH_SPECS, EXPLOSION_SHAKE_REDUCTION_FACTOR, H, MAX_EXPLOSION_SHAKE_FACTOR, MAX_WIND, PARTICLE_AMOUNT, PARTICLE_FADE_AMOUNT, PARTICLE_MAX_POWER_FACTOR, PARTICLE_MIN_LIFETIME, PARTICLE_MIN_POWER_FACTOR, PARTICLE_POWER_REDUCTION_FACTOR, PARTICLE_TIME_FACTOR, PARTICLE_WIND_REDUCTION_FACTOR, PLAYER_ANGLE_FAST_INCREMENT, PLAYER_ANGLE_INCREMENT, PLAYER_ANGLE_TICK_SOUND_INTERVAL, PLAYER_COLORS, PLAYER_ENERGY_POWER_MULTIPLIER, PLAYER_EXPLOSION_PARTICLE_POWER, PLAYER_FALL_DAMAGE_FACTOR, PLAYER_FALL_DAMAGE_HEIGHT, PLAYER_INITIAL_POWER, PLAYER_MAX_ENERGY, PLAYER_POWER_FAST_INCREMENT, PLAYER_POWER_INCREMENT, PLAYER_POWER_TICK_SOUND_INTERVAL, PLAYER_STARTING_WEAPONS, PLAYER_TANK_BOUNDING_RADIUS, PLAYER_TANK_Y_FOOTPRINT, TRAJECTORY_FADE_SPEED, TRAJECTORY_FLOAT_SPEED, W, WEAPON_TYPES, Z} from './constants.js';
+import {createCanvas, drawLine, drawRect, drawText, loop, plot} from './gfx.js';
 import {afterKeyDelay, key} from './input.js';
 import {clamp, deg2rad, distance, parable, random, randomInt, vec, wrap} from './math.js';
+import {PROJECTILE_TYPES} from './projectiles.js';
 import {createSky} from './sky.js';
-import {audio, createOsc, playTickSound} from './sound.js';
+import {playTickSound} from './sound.js';
 import {clipTerrain, closestLand, collapseTerrain, createTerrain, isTerrain, landHeight} from './terrain.js';
 import {sample} from './utils.js';
 import {EXPLOSION_TYPES} from './weapons.js';
@@ -13,8 +14,8 @@ import {EXPLOSION_TYPES} from './weapons.js';
 let state = 'start-game';
 const players = [];
 let currentPlayer = 0;
-let projectile = null;
-let explosion = null;
+let projectiles = [];
+let explosions = [];
 let wind = 0;
 let particles = [];
 let screenShake = 0;
@@ -131,95 +132,54 @@ function update() {
     }
 
     if (shoot) {
-      const {a, p, c, weapons, currentWeapon} = player;
+      const {a, p, weapons, currentWeapon} = player;
       const [px, py] = vec(x, y-3, a+180, 5);
 
-      const weaponType = weapons[currentWeapon];
-      weaponType.ammo -= 1;
+      const weapon = weapons[currentWeapon];
+      const {projectile} = WEAPON_TYPES[weapon.type];
+      const projectileType = PROJECTILE_TYPES[projectile.type];
+      weapon.ammo -= 1;
 
-      projectile = {
-        osc: createOsc('sine'),
-        player: player,
-        weaponTypeId: weaponType.type,
-        ox: px, oy: py,
-        x: px, y: py,
-        a, p, c,
-        t: 0,
-      };
+      projectiles.push(
+        projectileType.create(projectile, player, weapon, px, py, a, p, wind)
+      );
 
-      projectile.osc.start();
       state = 'shoot';
     }
   }
 
   else if (state === 'shoot') {
-    const prevProjectile = {...projectile};
-
-    for (let i=0; i<PROJECTILE_ITERATIONS_PER_FRAME; i++) {
-      const {weaponTypeId, ox, oy, a, p, t} = projectile;
-      const weapon = WEAPON_TYPES.find(x => x.id === weaponTypeId);
-      const [x, y] = parable(
-        t, ox, oy, deg2rad(180+a),
-        p / PROJECTILE_POWER_REDUCTION_FACTOR,
-        wind / PROJECTILE_WIND_REDUCTION_FACTOR,
-      );
-      const f = (
-        (1 - (1 / H * y)) *
-        (PROJECTILE_MAX_SOUND_FREQUENCY - PROJECTILE_MIN_SOUND_FREQUENCY) +
-        PROJECTILE_MIN_SOUND_FREQUENCY
-      );
-      projectile.t += PROJECTILE_ITERATION_PROGRESS;
-      projectile.x = x;
-      projectile.y = y;
-      projectile.osc.frequency.setValueAtTime(f, audio.currentTime);
-
-      if (
-        projectile.y > H ||
-        isTank(projectile.x, projectile.y) ||
-        isTerrain(terrain, projectile.x, projectile.y)
-      ) {
-        projectile.osc.stop();
-        const explosionSpec = weapon.explosion;
-        const explosionType = EXPLOSION_TYPES[explosionSpec.type];
-        explosion = explosionType.create(explosionSpec, projectile.x, projectile.y);
-        // @ts-ignore: canvas color hack
-        createParticles(projectile.x, projectile.y, projectile.p, terrain.color);
-        state = 'explosion';
-        break;
-      }
+    for (let i=projectiles.length-1; i>=0; i--) {
+      const projectile = projectiles[i];
+      const projectileType = PROJECTILE_TYPES[projectile.type];
+      if (projectileType.update(projectile, terrain, trajectories, explosions)) continue;
+      projectileType.stop(projectile);
+      projectiles.splice(i, 1);
     }
-
-    let trajectory = drawLineVirtual(
-      prevProjectile.x, prevProjectile.y,
-      projectile.x, projectile.y,
-      projectile.c,
-    )
-
-    trajectory = trajectory
-      .slice(0, trajectory.length-1) // Cut last pixel to prevent overlap
-      .map(x => ({...x, a:255}));    // Add alpha to all lines
-
-    trajectories = [
-      ...trajectories,
-      ...trajectory,
-    ];
+    if (projectiles.length === 0) {
+      state = 'explosions';
+    }
   }
 
-  else if (state === 'explosion') {
-    const explosionType = EXPLOSION_TYPES[explosion.type];
-    screenShake = (
-      clamp(0, explosion.r, MAX_EXPLOSION_SHAKE_FACTOR) /
-      EXPLOSION_SHAKE_REDUCTION_FACTOR
-    );
+  else if (state === 'explosions') {
+    for (let i=explosions.length-1; i>=0; i--) {
+      const explosion = explosions[i];
+      const explosionType = EXPLOSION_TYPES[explosion.type];
+      screenShake = (
+        clamp(0, explosion.r, MAX_EXPLOSION_SHAKE_FACTOR) /
+        EXPLOSION_SHAKE_REDUCTION_FACTOR
+      );
 
-    if (!explosionType.update(explosion)) {
+      if (explosionType.update(explosion)) continue;
       screenShake = 0;
       explosionType.clip(explosion, terrain);
       explosionType.stop(explosion);
       for (let player of players) if (!player.dead) {
         player.energy -= explosionType.damage(explosion, player) || 0;
       }
-      explosion = null;
+      explosions.splice(i, 1);
+    }
+    if (explosions.length === 0) {
       state = 'land-collapse';
     }
   }
@@ -252,10 +212,10 @@ function update() {
     const {x, y, c} = dyingPlayer;
     const explosionSpec = sample(DEATH_SPECS);
     const explosionType = EXPLOSION_TYPES[explosionSpec.type];
-    explosion = explosionType.create(explosionSpec, x, y);
+    explosions.push(explosionType.create(explosionSpec, x, y));
     createParticles(x, y, PLAYER_EXPLOSION_PARTICLE_POWER, c);
     dyingPlayer.dead = true;
-    state = 'explosion';
+    state = 'explosions';
   }
 
   else if (state === 'end-turn') {
@@ -283,7 +243,6 @@ function update() {
       if (!players[i].dead) {currentPlayer = i; break}
     }
 
-    projectile = null;
     fadeTrajectories();
     state = 'start-turn';
   }
@@ -301,7 +260,7 @@ function update() {
   }
 }
 
-function createParticles(x, y, p, c) {
+export function createParticles(x, y, p, c) {
   for (let i = 0; i < PARTICLE_AMOUNT; i++) {
     particles.push({
       t: 0,
@@ -344,7 +303,7 @@ function updateParticles() {
   }
 }
 
-function isTank(x, y) {
+export function isTank(x, y) {
   for (let player of players) {
     if (player.dead) continue;
 
@@ -423,14 +382,18 @@ function fadeTrajectories() {
 }
 
 function drawProjectile() {
-  if (!projectile) return;
-  plot(foreground, clamp(0, projectile.x, W-1), clamp(0, projectile.y, H-1), 'white');
+  if (!projectiles.length) return;
+  for (let projectile of projectiles) {
+    plot(foreground, clamp(0, projectile.x, W-1), clamp(0, projectile.y, H-1), 'white');
+  }
 }
 
 function drawExplosions() {
-  if (!explosion) return;
-  const explosionType = EXPLOSION_TYPES[explosion.type];
-  explosionType.draw(explosion, foreground, terrain);
+  if (!explosions.length) return;
+  for (let explosion of explosions) {
+    const explosionType = EXPLOSION_TYPES[explosion.type];
+    explosionType.draw(explosion, foreground, terrain);
+  }
 }
 
 function drawParticles() {
@@ -460,9 +423,9 @@ function drawStatus() {
 
   const player = players[currentPlayer];
   const {currentWeapon} = player;
-  const weaponType = player.weapons[currentWeapon];
-  const weapon = WEAPON_TYPES.find(x => x.id === weaponType.type);
-  drawText(foreground, `${player.name}   NRG:${player.energy}   AIM:${player.a}   PWR:${player.p}   ${clamp(0, weaponType.ammo, 99)} ${weapon.name}`, 8, 8, player.c, 'left');
+  const weapon = player.weapons[currentWeapon];
+  const weaponType = WEAPON_TYPES[weapon.type];
+  drawText(foreground, `${player.name}   NRG:${player.energy}   AIM:${player.a}   PWR:${player.p}   ${clamp(0, weapon.ammo, 99)} ${weaponType.name}`, 8, 8, player.c, 'left');
   drawText(foreground, `WIND: ${wind<=0?'<':''}${Math.abs(wind)}${wind>=0?'>':''}`, W-8, 8, 'white', 'right');
 }
 

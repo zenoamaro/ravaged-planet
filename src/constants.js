@@ -36,19 +36,19 @@ export const PLAYER_STARTING_WEAPONS = [
   // {type: 'tracer', ammo:Infinity},
 ]
 
-export const WEAPON_TYPES = [
-  {id:'tracer', name:'Tracer', explosion:{type:'tracer'}},
-  {id:'babyMissile', name:'Baby Missile', explosion:{type:'blast', r:5}},
-  {id:'missile', name:'Missile', explosion:{type:'blast', r:20}},
-  {id:'babyNuke', name:'Baby Nuke', explosion:{type:'blast', r:50}},
-  {id:'nuke', name:'Nuke', explosion:{type:'blast', r:100}},
-  {id:'smallDirt', name:'Small Dirt', explosion:{type:'dirt', r:25}},
-  {id:'dirt', name:'Dirt', explosion:{type:'dirt', r:50}},
-  {id:'largeDirt', name:'Ton of Dirt', explosion:{type:'dirt', r:75}},
-  {id:'smallDigBomb', name:'Small Dig Bomb', explosion:{type:'digBomb', r:25}},
-  {id:'digBomb', name:'Dig Bomb', explosion:{type:'digBomb', r:50}},
-  {id:'largeDigBomb', name:'Large Dig Bomb', explosion:{type:'digBomb', r:75}},
-];
+export const WEAPON_TYPES = {
+  tracer: {id:'tracer', name:'Tracer', projectile:{type:'normal'}, explosion:{type:'tracer'}},
+  babyMissile: {id:'babyMissile', name:'Baby Missile', projectile:{type:'normal'}, explosion:{type:'blast', r:5}},
+  missile: {id:'missile', name:'Missile', projectile:{type:'normal'}, explosion:{type:'blast', r:20}},
+  babyNuke: {id:'babyNuke', name:'Baby Nuke', projectile:{type:'normal'}, explosion:{type:'blast', r:50}},
+  nuke: {id:'nuke', name:'Nuke', projectile:{type:'normal'}, explosion:{type:'blast', r:100}},
+  smallDirt: {id:'smallDirt', name:'Small Dirt', projectile:{type:'normal'}, explosion:{type:'dirt', r:25}},
+  dirt: {id:'dirt', name:'Dirt', projectile:{type:'normal'}, explosion:{type:'dirt', r:50}},
+  largeDirt: {id:'largeDirt', name:'Ton of Dirt', projectile:{type:'normal'}, explosion:{type:'dirt', r:75}},
+  smallDigBomb: {id:'smallDigBomb', name:'Small Dig Bomb', projectile:{type:'normal'}, explosion:{type:'digBomb', r:25}},
+  digBomb: {id:'digBomb', name:'Dig Bomb', projectile:{type:'normal'}, explosion:{type:'digBomb', r:50}},
+  largeDigBomb: {id:'largeDigBomb', name:'Large Dig Bomb', projectile:{type:'normal'}, explosion:{type:'digBomb', r:75}},
+};
 
 export const DEATH_SPECS = [
   {type: 'blast', r: 5},
