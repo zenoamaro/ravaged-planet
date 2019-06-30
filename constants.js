@@ -10,7 +10,7 @@ export const PLAYER_COLORS = [
   'greenyellow',
   'gold',
   'hotpink',
-  'orchid',
+  'darkorchid',
 ];
 
 export const MAX_WIND = 25;
