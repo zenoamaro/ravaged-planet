@@ -77,8 +77,13 @@ export const EXPLOSION_TYPES = {
       clipTerrain(terrain, (ctx) => drawExplosion(ctx, x, y, cr));
     },
     damage(explosion, player) {
-      if (within(explosion.x, explosion.y, player.x, player.y, explosion.r)) {
+      if (within(explosion.x, explosion.y, player.x-3, player.y, explosion.r)) {
         return 100;
+      } else if (
+        within(explosion.x, explosion.y, player.x-3, player.y, explosion.r) ||
+        within(explosion.x, explosion.y, player.x+3, player.y, explosion.r)
+      ) {
+        return 50;
       }
     }
   },

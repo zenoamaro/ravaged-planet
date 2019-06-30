@@ -1,7 +1,7 @@
-import {H, PROJECTILE_MAX_SOUND_FREQUENCY, MAX_WIND, PROJECTILE_MIN_SOUND_FREQUENCY, PLAYER_COLORS, PLAYER_INITIAL_POWER, PROJECTILE_POWER_REDUCTION_FACTOR, W, Z, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS, PLAYER_MAX_ENERGY, PLAYER_ENERGY_POWER_MULTIPLIER, PLAYER_FALL_DAMAGE_FACTOR, PLAYER_FALL_DAMAGE_HEIGHT, PLAYER_WEAPON_CHANGE_DELAY, PARTICLE_AMOUNT, PROJECTILE_WIND_REDUCTION_FACTOR, PARTICLE_POWER_REDUCTION_FACTOR, PARTICLE_WIND_REDUCTION_FACTOR, PARTICLE_MIN_POWER_FACTOR, PARTICLE_MAX_POWER_FACTOR, PARTICLE_MIN_LIFETIME, PARTICLE_TIME_FACTOR, PLAYER_EXPLOSION_PARTICLE_POWER, EXPLOSION_SHAKE_REDUCTION_FACTOR, MAX_EXPLOSION_SHAKE_FACTOR, TRAJECTORY_FADE_SPEED, PARTICLE_FADE_AMOUNT, TRAJECTORY_FLOAT_SPEED} from './constants.js';
+import {H, PROJECTILE_MAX_SOUND_FREQUENCY, MAX_WIND, PROJECTILE_MIN_SOUND_FREQUENCY, PLAYER_COLORS, PLAYER_INITIAL_POWER, PROJECTILE_POWER_REDUCTION_FACTOR, W, Z, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS, PLAYER_MAX_ENERGY, PLAYER_ENERGY_POWER_MULTIPLIER, PLAYER_FALL_DAMAGE_FACTOR, PLAYER_FALL_DAMAGE_HEIGHT, PLAYER_WEAPON_CHANGE_DELAY, PARTICLE_AMOUNT, PROJECTILE_WIND_REDUCTION_FACTOR, PARTICLE_POWER_REDUCTION_FACTOR, PARTICLE_WIND_REDUCTION_FACTOR, PARTICLE_MIN_POWER_FACTOR, PARTICLE_MAX_POWER_FACTOR, PARTICLE_MIN_LIFETIME, PARTICLE_TIME_FACTOR, PLAYER_EXPLOSION_PARTICLE_POWER, EXPLOSION_SHAKE_REDUCTION_FACTOR, MAX_EXPLOSION_SHAKE_FACTOR, TRAJECTORY_FADE_SPEED, PARTICLE_FADE_AMOUNT, TRAJECTORY_FLOAT_SPEED, PLAYER_TANK_BOUNDING_RADIUS} from './constants.js';
 import {createCanvas, drawLine, drawRect, drawText, loop, plot, drawLineVirtual} from './gfx.js';
 import {key} from './input.js';
-import {clamp, deg2rad, parable, randomInt, vec, wrap, random} from './math.js';
+import {clamp, deg2rad, parable, randomInt, vec, wrap, random, within} from './math.js';
 import {createSky} from './sky.js';
 import {audio, createOsc, playTickSound} from './sound.js';
 import {collapseTerrain, createTerrain, isTerrain, landHeight, closestLand, clipTerrain} from './terrain.js';
@@ -160,7 +160,11 @@ function update() {
       projectile.y = y;
       projectile.osc.frequency.setValueAtTime(f, audio.currentTime);
 
-      if (projectile.y > H || isTerrain(terrain, projectile.x, projectile.y)) {
+      if (
+        projectile.y > H ||
+        isTank(projectile.x, projectile.y) ||
+        isTerrain(terrain, projectile.x, projectile.y)
+      ) {
         projectile.osc.stop();
         const explosionSpec = weapon.explosion;
         const explosionType = EXPLOSION_TYPES[explosionSpec.type];
@@ -322,6 +326,14 @@ function updateParticles() {
     particle.x = tx;
     particle.y = ty;
     particle.alpha -= PARTICLE_FADE_AMOUNT;
+  }
+}
+
+function isTank(x, y) {
+  for (let player of players) {
+    if (within(x, y, player.x, player.y, PLAYER_TANK_BOUNDING_RADIUS)) {
+      return true;
+    }
   }
 }
 
