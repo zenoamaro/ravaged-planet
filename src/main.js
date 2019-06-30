@@ -46,7 +46,7 @@ for (let [color, borderColor] of PLAYER_COLORS) {
     x, y, a,
     c: color, cb: borderColor,
     p: PLAYER_INITIAL_POWER,
-    weapons: [...PLAYER_STARTING_WEAPONS],
+    weapons: PLAYER_STARTING_WEAPONS.map(x => ({...x})), // FIXME
     currentWeapon: 0,
     energy: PLAYER_MAX_ENERGY,
     ai: i !== 0 ? sample(Object.keys(AI_TYPES)) : undefined,
