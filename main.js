@@ -358,11 +358,18 @@ function drawProjectile() {
 }
 
 function fadeTrajectories(amount) {
-  for (let trajectory of trajectories) {
+  for (let i=trajectories.length-1; i>=0; i--) {
+    const trajectory = trajectories[i];
     trajectory.a -= amount;
     trajectory.y -= TRAJECTORY_FLOAT_SPEED;
+
+    if (
+      trajectory.a <= 0 || trajectory.y <= 0 ||
+      isTerrain(terrain, trajectory.x, trajectory.y)
+    ) {
+      trajectories.splice(i, 1);
+    }
   }
-  trajectories = trajectories.filter(x => x.a > 0);
 }
 
 function drawExplosions() {
