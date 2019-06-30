@@ -22,18 +22,20 @@ let trajectories = [];
 let idle = false;
 let winner;
 
+// Music
+// const music = createAudioLoop('assets/battle.mp3');
+
 // Init layers
 const sky = createSky(W, H);
 const traces = createCanvas(W, H);
 const terrain = createTerrain(W, H);
 const foreground = createCanvas(W, H);
-// const music = createAudioLoop('assets/battle.mp3');
 
-for (let c of [sky, traces, terrain, foreground]) {
-  c.canvas.style.width = `${W * Z}px`;
-  c.canvas.style.height = `${H * Z}px`;
-  document.body.appendChild(c.canvas);
-}
+// Composited layer
+const framebuffer = createCanvas(W, H);
+framebuffer.canvas.style.width = `${W * Z}px`;
+framebuffer.canvas.style.height = `${H * Z}px`;
+document.body.appendChild(framebuffer.canvas);
 
 // Init players
 let i=0;
@@ -358,6 +360,7 @@ function isTank(x, y) {
 
 function draw() {
   if (idle && particles.length===0) return;
+
   foreground.clearRect(0, 0, W, H);
   drawTrajectories();
   drawPlayers();
@@ -365,6 +368,11 @@ function draw() {
   drawExplosions();
   drawParticles();
   drawStatus();
+
+  for (let c of [sky, traces, terrain, foreground]) {
+    framebuffer.drawImage(c.canvas, 0, 0);
+  }
+
   drawScreenShake();
 }
 
@@ -439,9 +447,7 @@ function drawParticles() {
 function drawScreenShake() {
   const x = randomInt(-screenShake, screenShake);
   const y = randomInt(-screenShake, screenShake);
-  for (let c of [sky, terrain, traces, foreground]) {
-    c.canvas.style.transform = `translate(${x}px, ${y}px)`;
-  }
+  framebuffer.canvas.style.transform = `translate(${x}px, ${y}px)`;
 }
 
 function drawStatus() {
