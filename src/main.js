@@ -73,6 +73,7 @@ function update() {
     const player = players[currentPlayer];
     const {x, y, a, p, weapons, energy} = player;
     const maxPower = energy * PLAYER_ENERGY_POWER_MULTIPLIER;
+    player.p = clamp(0, player.p, maxPower);
     const isPrecise = key('Alt');
     const isFast = key('Shift');
     const isReverse = key('Shift');
