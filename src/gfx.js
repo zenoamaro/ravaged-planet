@@ -53,8 +53,18 @@ export function drawLine(ctx, x1, y1, x2, y2, color, plotFn=plot) {
 
 export function drawLineVirtual(x1, y1, x2, y2, color) {
   const points = [];
-  drawLine(null, x1, y1, x2, y2, color, (ctx, x, y, c) => points.push({x, y, c}));
+  drawLine(
+    null, x1, y1, x2, y2, color,
+    (ctx, x, y, c) => points.push({x, y, c})
+  );
   return points;
+}
+
+export function checkLineWith(x1, y1, x2, y2, fn) {
+  drawLine(
+    null, x1, y1, x2, y2, null,
+    (ctx, x, y, c) => fn(x, y)
+  );
 }
 
 export function drawRect(ctx, x, y, w, h, color) {
