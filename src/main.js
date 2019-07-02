@@ -1,6 +1,6 @@
 import {AI_TYPES} from './ai.js';
-import {DEATH_SPECS, EXPLOSION_SHAKE_REDUCTION_FACTOR, H, MAX_EXPLOSION_SHAKE_FACTOR, MAX_WIND, PARTICLE_AMOUNT, PARTICLE_FADE_AMOUNT, PARTICLE_MAX_POWER_FACTOR, PARTICLE_MIN_LIFETIME, PARTICLE_MIN_POWER_FACTOR, PARTICLE_POWER_REDUCTION_FACTOR, PARTICLE_TIME_FACTOR, PARTICLE_WIND_REDUCTION_FACTOR, PLAYER_ANGLE_FAST_INCREMENT, PLAYER_ANGLE_INCREMENT, PLAYER_ANGLE_TICK_SOUND_INTERVAL, PLAYER_COLORS, PLAYER_ENERGY_POWER_MULTIPLIER, PLAYER_EXPLOSION_PARTICLE_POWER, PLAYER_FALL_DAMAGE_FACTOR, PLAYER_FALL_DAMAGE_HEIGHT, PLAYER_INITIAL_POWER, PLAYER_MAX_ENERGY, PLAYER_POWER_FAST_INCREMENT, PLAYER_POWER_INCREMENT, PLAYER_POWER_TICK_SOUND_INTERVAL, PLAYER_STARTING_WEAPONS, PLAYER_TANK_BOUNDING_RADIUS, PLAYER_TANK_Y_FOOTPRINT, TRAJECTORY_FADE_SPEED, TRAJECTORY_FLOAT_SPEED, W, WEAPON_TYPES, Z} from './constants.js';
-import {createCanvas, drawLine, drawRect, drawText, loop, plot} from './gfx.js';
+import {DEATH_SPECS, EXPLOSION_SHAKE_REDUCTION_FACTOR, H, MAX_EXPLOSION_SHAKE_FACTOR, MAX_WIND, PARTICLE_AMOUNT, PARTICLE_FADE_AMOUNT, PARTICLE_MAX_POWER_FACTOR, PARTICLE_MIN_LIFETIME, PARTICLE_MIN_POWER_FACTOR, PARTICLE_POWER_REDUCTION_FACTOR, PARTICLE_TIME_FACTOR, PARTICLE_WIND_REDUCTION_FACTOR, PLAYER_ANGLE_FAST_INCREMENT, PLAYER_ANGLE_INCREMENT, PLAYER_ANGLE_TICK_SOUND_INTERVAL, PLAYER_COLORS, PLAYER_ENERGY_POWER_MULTIPLIER, PLAYER_EXPLOSION_PARTICLE_POWER, PLAYER_FALL_DAMAGE_FACTOR, PLAYER_FALL_DAMAGE_HEIGHT, PLAYER_INITIAL_POWER, PLAYER_MAX_ENERGY, PLAYER_POWER_FAST_INCREMENT, PLAYER_POWER_INCREMENT, PLAYER_POWER_TICK_SOUND_INTERVAL, PLAYER_STARTING_TOOLS, PLAYER_STARTING_WEAPONS, PLAYER_TANK_BOUNDING_RADIUS, PLAYER_TANK_Y_FOOTPRINT, TRAJECTORY_FADE_SPEED, TRAJECTORY_FLOAT_SPEED, W, WEAPON_TYPES, Z} from './constants.js';
+import {createCanvas, drawLine, drawRect, drawSemiCircle, drawText, loop, plot} from './gfx.js';
 import {afterKeyDelay, key} from './input.js';
 import {clamp, deg2rad, distance, parable, random, randomInt, vec, wrap} from './math.js';
 import {PROJECTILE_TYPES} from './projectiles.js';
@@ -49,7 +49,8 @@ for (let [color, borderColor] of PLAYER_COLORS) {
     x, y, a,
     c: color, cb: borderColor,
     p: PLAYER_INITIAL_POWER,
-    weapons: PLAYER_STARTING_WEAPONS.map(x => ({...x})), // FIXME
+    tools: PLAYER_STARTING_TOOLS.map(x => ({...x})), // FIXME: Ghetto clone
+    weapons: PLAYER_STARTING_WEAPONS.map(x => ({...x})), // FIXME: Ghetto clone
     currentWeapon: 0,
     energy: PLAYER_MAX_ENERGY,
     ai: i !== 0 ? sample(Object.keys(AI_TYPES)) : undefined,
@@ -197,8 +198,17 @@ function update() {
         stable = false;
         player.y++;
         if (player.fallHeight++ >= PLAYER_FALL_DAMAGE_HEIGHT) {
+          if (player.energy > 0 && player.parachute) continue;
+          const parachute = player.tools.find(x => x.type === 'parachute');
+          if (player.energy > 0 && parachute && parachute.ammo > 0) {
+            player.parachute = parachute;
+            parachute.ammo--;
+            continue;
+          }
           player.energy -= PLAYER_FALL_DAMAGE_FACTOR;
         }
+      } else {
+        player.parachute = null;
       }
     }
     if (stable) state = 'destroy-players';
@@ -227,15 +237,12 @@ function update() {
       return state = 'player-win';
     }
 
-    const player = players[currentPlayer];
-
-    const weaponType = player.weapons[player.currentWeapon];
-    if (weaponType.ammo <= 0) {
-      player.weapons = player.weapons.filter(x => x !== weaponType);
+    for (let player of players) {
+      player.weapons = player.weapons.filter(x => x.ammo > 0);
+      player.tools = player.tools.filter(x => x.ammo > 0);
+      player.currentWeapon = wrap(0, player.currentWeapon, player.weapons.length-1);
+      player.fallHeight = 0;
     }
-
-    player.currentWeapon = wrap(0, player.currentWeapon, player.weapons.length-1);
-    player.fallHeight = 0;
 
     for (let p=0; p<players.length; p++) {
       const i = wrap(0, currentPlayer+p+1, players.length-1);
@@ -337,10 +344,24 @@ function drawPlayers() {
   for (let player of players) {
     const {x, y, a, c, cb, energy, dead} = player;
     if (dead) continue;
+
+    // Parachute
+    if (player.parachute) {
+      drawSemiCircle(foreground, x, y-15, 10, 'white');
+      drawLine(foreground, x-10, y-15, x-2, y, 'white');
+      drawLine(foreground, x-5,  y-15, x-1, y, 'white');
+      drawLine(foreground, x,    y-15, x,   y, 'white');
+      drawLine(foreground, x+5,  y-15, x+1, y, 'white');
+      drawLine(foreground, x+10, y-15, x+2, y, 'white');
+    }
+
+    // Cannon
     const [px, py] = vec(x, y-3, a+180, 3);
     drawLine(foreground, x-1, y-3, px-1, py, cb);
     drawLine(foreground, x+1, y-3, px+1, py, cb);
     drawLine(foreground, x, y-4, px, py-1, cb);
+
+    // Tank
     drawRect(foreground, x-4, y-3, 8, 1, cb);
     drawRect(foreground, x-5, y-2, 10, 2, cb);
     drawRect(foreground, x-4, y-0, 8, 1, cb);
@@ -349,6 +370,7 @@ function drawPlayers() {
     drawRect(foreground, x-4, y-2, 8, 2, c);
     drawRect(foreground, x-3, y-0, 6, 1, c);
 
+    // Damage
     const damage = clamp(0, 1 - energy/PLAYER_MAX_ENERGY, 1);
     foreground.globalAlpha = damage * 0.7;
     drawRect(foreground, x-4, y-2, 8, 2, cb);

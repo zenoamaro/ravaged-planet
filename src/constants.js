@@ -30,8 +30,8 @@ export const PLAYER_STARTING_WEAPONS = [
   {type: 'babyRoller', ammo:5},
   {type: 'roller', ammo:3},
   {type: 'superRoller', ammo:1},
-  {type: 'mirv', ammo:5},
-  {type: 'xmirv', ammo:3},
+  {type: 'mirv', ammo:3},
+  {type: 'xmirv', ammo:1},
   {type: 'leapfrog', ammo:3},
   {type: 'superLeapfrog', ammo:1},
   {type: 'smallDirt', ammo:5},
@@ -79,6 +79,10 @@ export const DEATH_SPECS = [
   {type: 'dirtCone', r: 100},
   {type: 'dirtCone', r: 200},
   {type: 'dirtCone', r: 400},
+];
+
+export const PLAYER_STARTING_TOOLS = [
+  {type: 'parachute', ammo: 1},
 ];
 
 export const MAX_WIND = 25;

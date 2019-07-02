@@ -93,6 +93,16 @@ export function drawCircle(ctx, x, y, r, color) {
   }
 }
 
+export function drawSemiCircle(ctx, x, y, r, color) {
+  x = Math.round(x);
+  y = Math.round(y);
+  r = Math.round(r);
+  for (let cy = -r; cy <= 0; cy++) {
+    const w = Math.round(Math.sqrt(r*r - cy*cy));
+    drawRect(ctx, x-w, y+cy, w*2, 1, color);
+  }
+}
+
 /** @param align {CanvasTextAlign} */
 /** @param baseline {CanvasTextBaseline} */
 export function drawText(ctx, text, x, y, color, align='left', baseline='top') {
