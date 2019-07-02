@@ -128,4 +128,4 @@ export const FONT_WIDTH = 3;
 export const FONT_HEIGHT = 5;
 
 export const SOUND_MUSIC_VOLUME = 0.3;
-export const SOUND_SFX_VOLUME = 0.05;
+export const SOUND_SFX_VOLUME = 0.1;

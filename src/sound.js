@@ -2,14 +2,18 @@ import {SOUND_MUSIC_VOLUME, SOUND_SFX_VOLUME} from './constants.js';
 
 // @ts-ignore
 export const audio = new (window.AudioContext || window.webkitAudioContext)();
+export const volume = createGain(1);
+volume.connect(audio.destination);
 
-export const music = audio.createGain(audio);
-music.gain.setValueAtTime(SOUND_MUSIC_VOLUME, audio.currentTime);
-music.connect(audio.destination);
+export const music = createCompressor();
+export const musicGain = createGain(SOUND_MUSIC_VOLUME);
+music.connect(musicGain);
+musicGain.connect(volume);
 
-export const sfx = audio.createGain(audio);
-sfx.gain.setValueAtTime(SOUND_SFX_VOLUME, audio.currentTime);
-sfx.connect(audio.destination);
+export const sfx = createCompressor();
+export const sfxGain = createGain(SOUND_SFX_VOLUME);
+sfx.connect(sfxGain);
+sfxGain.connect(volume);
 
 export async function createAudioLoop(src) {
   const file = await fetch(src);
@@ -28,6 +32,22 @@ export function createOsc(type='triangle') {
   osc.type = type;
   osc.connect(sfx);
   return osc;
+}
+
+export function createGain(amount) {
+  const gain = audio.createGain();
+  gain.gain.setValueAtTime(amount, audio.currentTime);
+  return gain;
+}
+
+export function createCompressor() {
+  let compressor = audio.createDynamicsCompressor();
+  compressor.threshold.setValueAtTime(-30, audio.currentTime);
+  compressor.knee.setValueAtTime(40, audio.currentTime);
+  compressor.ratio.setValueAtTime(12, audio.currentTime);
+  compressor.attack.setValueAtTime(0, audio.currentTime);
+  compressor.release.setValueAtTime(0.25, audio.currentTime);
+  return compressor;
 }
 
 export function playTickSound() {
