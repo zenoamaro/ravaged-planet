@@ -124,7 +124,7 @@ export const EXPLOSION_TYPES = {
       osc.stop();
     },
     update(explosion) {
-      return ++explosion.cr < explosion.r;
+      return ++explosion.cr < Math.min(explosion.r, explosion.y);
     },
     draw(explosion, foreground, terrain) {
       const {x, y, cr, osc, pattern} = explosion;

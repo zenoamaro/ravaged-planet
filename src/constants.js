@@ -78,7 +78,7 @@ export const DEATH_SPECS = [
   {type: 'dirtCone', r: 50},
   {type: 'dirtCone', r: 100},
   {type: 'dirtCone', r: 200},
-  {type: 'dirtCone', r: 400},
+  {type: 'dirtCone', r: H},
 ];
 
 export const PLAYER_STARTING_TOOLS = [
