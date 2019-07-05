@@ -1,13 +1,7 @@
-import {createCanvas, drawRect, clipCanvas, plot} from './gfx.js';
-import {randomInt, gradient} from './math.js';
 import {SKY_COLORS} from './constants.js';
+import {drawRect} from './gfx.js';
+import {gradient} from './math.js';
 import {sample} from './utils.js';
-
-export function createSky(width, height) {
-  const ctx = createCanvas(width, height);
-  generateSky(ctx);
-  return ctx;
-}
 
 export function generateSky(ctx) {
   const {width, height} = ctx.canvas;

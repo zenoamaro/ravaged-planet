@@ -1,5 +1,5 @@
-import {createCanvas, drawRect, clipCanvas, drawCircle} from './gfx.js';
-import {coords2index, random, randomInt, clamp} from './math.js';
+import {clipCanvas, drawCircle, drawRect} from './gfx.js';
+import {clamp, coords2index, random, randomInt} from './math.js';
 import {sample} from './utils.js';
 
 let cachedImageData;
@@ -9,11 +9,11 @@ function cacheImageData(ctx) {
   cachedImageData = ctx.getImageData(0, 0, width, height);
 }
 
-export function createTerrain(width, height) {
-  const terrain = createCanvas(width, height);
-  const generateTerrain = sample(Object.values(TERRAIN_TYPES));
-  generateTerrain(terrain);
-  return terrain;
+export function generateTerrain(ctx, type) {
+  const generator = type? TERRAIN_TYPES[type] : sample(Object.values(TERRAIN_TYPES));
+  const {width, height} = ctx.canvas;
+  ctx.clearRect(0, 0, width, height);
+  generator(ctx);
 }
 
 const TERRAIN_TYPES = {

@@ -4,15 +4,15 @@ import {createCanvas, drawLine, drawRect, drawSemiCircle, drawText, loop, plot} 
 import {afterKeyDelay, key} from './input.js';
 import {clamp, deg2rad, distance, parable, random, randomInt, vec, wrap} from './math.js';
 import {PROJECTILE_TYPES} from './projectiles.js';
-import {createSky} from './sky.js';
+import {generateSky} from './sky.js';
 import {playTickSound} from './sound.js';
-import {clipTerrain, closestLand, collapseTerrain, createTerrain, isTerrain, landHeight} from './terrain.js';
+import {clipTerrain, closestLand, collapseTerrain, generateTerrain, isTerrain, landHeight} from './terrain.js';
 import {sample} from './utils.js';
 import {EXPLOSION_TYPES} from './weapons.js';
 
 
 let state = 'start-game';
-const players = [];
+let players = [];
 let currentPlayer = 0;
 let projectiles = [];
 let explosions = [];
@@ -27,9 +27,9 @@ let winner;
 // const music = createAudioLoop('assets/battle.mp3');
 
 // Init layers
-const sky = createSky(W, H);
+const sky = createCanvas(W, H);
 const traces = createCanvas(W, H);
-const terrain = createTerrain(W, H);
+const terrain = createCanvas(W, H);
 const foreground = createCanvas(W, H);
 
 // Composited layer
@@ -38,27 +38,50 @@ framebuffer.canvas.style.width = `${W * Z}px`;
 framebuffer.canvas.style.height = `${H * Z}px`;
 document.body.appendChild(framebuffer.canvas);
 
-// Init players
-let i=0;
-for (let [color, borderColor] of PLAYER_COLORS) {
-  const x = 50 + (W-100) / 5 * i;
-  const y = landHeight(terrain, x) + 1;
-  const a = x > W/2 ? 45 : 180-45;
-  players.push({
-    name: `Player ${i+1}`,
-    x, y, a,
-    c: color, cb: borderColor,
-    p: PLAYER_INITIAL_POWER,
-    tools: PLAYER_STARTING_TOOLS.map(x => ({...x})), // FIXME: Ghetto clone
-    weapons: PLAYER_STARTING_WEAPONS.map(x => ({...x})), // FIXME: Ghetto clone
-    currentWeapon: 0,
-    energy: PLAYER_MAX_ENERGY,
-    ai: i !== 0 ? sample(Object.keys(AI_TYPES)) : undefined,
-    fallHeight: 0,
-    dead: false,
-  });
-  clipTerrain(terrain, (ctx) => drawRect(ctx, x-4, 0, 8, y, ctx.color));
-  i++;
+function init() {
+  state = 'start-game';
+  players = [];
+  currentPlayer = 0;
+  projectiles = [];
+  explosions = [];
+  particles = [];
+  screenShake = 0;
+  trajectories = [];
+  idle = false;
+  winner = null;
+  wind = randomInt(-MAX_WIND, +MAX_WIND);
+
+  initLevel();
+  initPlayers();
+}
+
+function initPlayers() {
+  let i=0;
+  for (let [color, borderColor] of PLAYER_COLORS) {
+    const x = 50 + (W-100) / 5 * i;
+    const y = landHeight(terrain, x) + 1;
+    const a = x > W/2 ? 45 : 180-45;
+    players.push({
+      name: `Player ${i+1}`,
+      x, y, a,
+      c: color, cb: borderColor,
+      p: PLAYER_INITIAL_POWER,
+      tools: PLAYER_STARTING_TOOLS.map(x => ({...x})), // FIXME: Ghetto clone
+      weapons: PLAYER_STARTING_WEAPONS.map(x => ({...x})), // FIXME: Ghetto clone
+      currentWeapon: 0,
+      energy: PLAYER_MAX_ENERGY,
+      ai: i !== 0 ? sample(Object.keys(AI_TYPES)) : undefined,
+      fallHeight: 0,
+      dead: false,
+    });
+    clipTerrain(terrain, (ctx) => drawRect(ctx, x-4, 0, 8, y, ctx.color));
+    i++;
+  }
+}
+
+function initLevel() {
+  generateSky(sky);
+  generateTerrain(terrain);
 }
 
 function update() {
@@ -67,7 +90,7 @@ function update() {
   updateParticles();
 
   if (state === 'start-game') {
-    wind = randomInt(-MAX_WIND, +MAX_WIND);
+    init();
     state = 'start-turn';
   }
 
@@ -254,10 +277,12 @@ function update() {
   }
 
   else if (state === 'player-win') {
+    if (key('Enter')) state = 'start-game';
     idle = true;
   }
 
   else if (state === 'game-over') {
+    if (key('Enter')) state = 'start-game';
     idle = true;
   }
 
@@ -434,11 +459,13 @@ function drawScreenShake() {
 function drawStatus() {
   if (state === 'player-win') {
     drawText(foreground, `${winner.name} wins!`, 8, 8, winner.c, 'left');
+    drawText(foreground, `Press ENTER to play again`, W-8, 8, 'white', 'right');
     return;
   }
 
   else if (state === 'game-over') {
     drawText(foreground, `EVERYBODY IS DEAD`, 8, 8, 'white', 'left');
+    drawText(foreground, `Press ENTER to play again`, W-8, 8, 'white', 'right');
     return;
   }
 
