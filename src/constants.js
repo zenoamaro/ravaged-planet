@@ -64,6 +64,12 @@ export const WEAPON_TYPES = {
   largeDigBomb: {id:'largeDigBomb', name:'Large Dig Bomb', projectile:{type:'normal'}, explosion:{type:'digBomb', r:75}},
 };
 
+export const SHIELD_TYPES = {
+  shield: {id:'shield', r:15, s:1, energy:100, projectileEffect:'nullify', color:'white'},
+  heavyShield: {id:'heavyShield', r:15, s:2, energy:200, projectileEffect:'nullify', color:'white'},
+  springShield: {id:'springShield', r:15, s:1, energy:100, projectileEffect:'spring', color:'deeppink'},
+};
+
 export const DEATH_SPECS = [
   {type: 'blast', r: 5},
   {type: 'blast', r: 15},

@@ -1,4 +1,4 @@
-import {PLAYER_TANK_BOUNDING_RADIUS, PLAYER_TANK_Y_FOOTPRINT} from './constants.js';
+import {PLAYER_TANK_BOUNDING_RADIUS, PLAYER_TANK_Y_FOOTPRINT, SHIELD_TYPES} from './constants.js';
 import {drawCircle, plot} from './gfx.js';
 import {clamp, cycle, distance, randomInt} from './math.js';
 import {audio, createOsc} from './sound.js';
@@ -51,9 +51,11 @@ export const EXPLOSION_TYPES = {
     damage(explosion, player) {
       const {x, y, r} = explosion;
       const dist = distance(x, y, player.x, player.y+PLAYER_TANK_Y_FOOTPRINT);
-      const tolerance = clamp(0, dist - r, Infinity);
-      if (tolerance <= PLAYER_TANK_BOUNDING_RADIUS) {
-        return Math.round(100 * (1 - tolerance / (PLAYER_TANK_BOUNDING_RADIUS+1)));
+      const overlap = clamp(0, dist - r, Infinity);
+      const shieldType = player.shield ? SHIELD_TYPES[player.shield.type] : null;
+      const radius = PLAYER_TANK_BOUNDING_RADIUS + (shieldType? shieldType.r : 0);
+      if (overlap <= radius) {
+        return Math.round(100 * (1 - overlap / (radius+1)));
       }
     }
   },

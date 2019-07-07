@@ -1,6 +1,6 @@
 import {H, PROJECTILE_ITERATIONS_PER_FRAME, PROJECTILE_ITERATION_PROGRESS, PROJECTILE_MAX_SOUND_FREQUENCY, PROJECTILE_MIN_SOUND_FREQUENCY, PROJECTILE_POWER_REDUCTION_FACTOR, PROJECTILE_WIND_REDUCTION_FACTOR, WEAPON_TYPES} from './constants.js';
 import {checkLineWith, drawLineVirtual} from './gfx.js';
-import {createParticles, isTank} from './main.js';
+import {createParticles, isTank, isTankShield} from './main.js';
 import {deg2rad, parable} from './math.js';
 import {audio, createOsc} from './sound.js';
 import {isTerrain, landHeight} from './terrain.js';
@@ -47,6 +47,20 @@ export const PROJECTILE_TYPES = {
           PROJECTILE_MIN_SOUND_FREQUENCY
         );
         projectile.osc.frequency.setValueAtTime(f, audio.currentTime);
+
+        // FIXME: Better detection of player's own shield
+        const shieldHit = isTankShield(x, y);
+        if (shieldHit && shieldHit.player !== projectile.player) {
+          if (shieldHit.shieldType.projectileEffect === 'nullify') {
+            exploded = true;
+            break;
+          } else if (shieldHit.shieldType.projectileEffect === 'spring') {
+            projectile.ox = projectile.x;
+            projectile.oy = projectile.y -1;
+            projectile.t = 0;
+            break;
+          }
+        }
 
         if (
           y > H ||
@@ -132,6 +146,20 @@ export const PROJECTILE_TYPES = {
 
           x = projectile.x;
           y = projectile.y;
+
+          // FIXME: Better detection of player's own shield
+          const shieldHit = isTankShield(x, y);
+          if (shieldHit && shieldHit.player !== projectile.player) {
+            if (shieldHit.shieldType.projectileEffect === 'nullify') {
+              finished = true;
+              break;
+            } else if (shieldHit.shieldType.projectileEffect === 'spring') {
+              projectile.ox = projectile.x;
+              projectile.oy = projectile.y - 10;
+              projectile.t = 0;
+              break;
+            }
+          }
 
           if (y > H || isTank(x, y)) {
             projectile.state = 'explode';

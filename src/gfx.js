@@ -93,6 +93,21 @@ export function drawCircle(ctx, x, y, r, color) {
   }
 }
 
+export function strokeCircle(ctx, x, y, r, color) {
+  x = Math.round(x);
+  y = Math.round(y);
+  r = Math.round(r);
+
+  let prevPoint;
+  for (let cy = -r; cy <= r; cy++) {
+    const w = Math.round(Math.sqrt(r*r - cy*cy));
+    if (!prevPoint) prevPoint = {cy, w};
+    drawLine(ctx, x-prevPoint.w, y+prevPoint.cy, x-w, y+cy, color);
+    drawLine(ctx, x+prevPoint.w, y+prevPoint.cy, x+w, y+cy, color);
+    prevPoint = {cy, w};
+  }
+}
+
 export function drawSemiCircle(ctx, x, y, r, color) {
   x = Math.round(x);
   y = Math.round(y);
