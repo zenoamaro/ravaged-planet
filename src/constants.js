@@ -15,7 +15,7 @@ export const MAX_PLAYERS = 6;
 
 export const PLAYER_COLORS = [
   ['tomato', 'darkred'],
-  ['royalblue', 'darkblue'],
+  ['deepskyblue', 'royalblue'],
   ['greenyellow', 'green'],
   ['gold', 'peru'],
   ['hotpink', 'mediumvioletred'],
