@@ -4,6 +4,23 @@ export function sample(arr) {
   return arr[randomInt(0, arr.length-1)];
 }
 
+export function without(arr, item) {
+  return arr.filter(x => x !== item);
+}
+
+export function shuffle(arr) {
+  const result = [];
+  let original = [...arr];
+
+  for (let i=0; i<arr.length; i++) {
+    const value = sample(original);
+    original = without(original, value);
+    result.push(value);
+  }
+
+  return result;
+}
+
 export function nextId() {
   // @ts-ignore
   const id = nextId.id || 0;

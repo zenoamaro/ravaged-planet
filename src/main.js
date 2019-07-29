@@ -7,7 +7,7 @@ import {PROJECTILE_TYPES} from './projectiles.js';
 import {generateSky} from './sky.js';
 import {playTickSound} from './sound.js';
 import {clipTerrain, closestLand, collapseTerrain, generateTerrain, isTerrain, landHeight} from './terrain.js';
-import {sample} from './utils.js';
+import {sample, shuffle} from './utils.js';
 import {EXPLOSION_TYPES} from './weapons.js';
 
 
@@ -56,15 +56,12 @@ function init() {
 }
 
 function initPlayers() {
-  let i=0;
-  for (let [color, borderColor] of PLAYER_COLORS) {
-    const x = 50 + (W-100) / 5 * i;
-    const y = landHeight(terrain, x) + 1;
-    const a = x > W/2 ? 45 : 180-45;
+  for (let i=0; i<PLAYER_COLORS.length; i++) {
+    const [color, borderColor] = PLAYER_COLORS[i];
     players.push({
       name: `Player ${i+1}`,
       dead: false,
-      x, y, a,
+      x:0, y:0, a:0,
       c: color, cb: borderColor,
       p: PLAYER_INITIAL_POWER,
       tools: PLAYER_STARTING_TOOLS.map(x => ({...x})), // FIXME: Ghetto clone
@@ -76,8 +73,18 @@ function initPlayers() {
       parachute: null,
       fallHeight: 0,
     });
-    clipTerrain(terrain, (ctx) => drawRect(ctx, x-4, 0, 8, y, ctx.color));
-    i++;
+  }
+
+  // Randomize positions
+  players = shuffle(players);
+
+  // Positions
+  for (let i=0; i<PLAYER_COLORS.length; i++) {
+    const player = players[i];
+    player.x = 50 + (W-100) / 5 * i;
+    player.y = landHeight(terrain, player.x) + 1;
+    player.a = player.x > W/2 ? 45 : 180-45;
+    clipTerrain(terrain, (ctx) => drawRect(ctx, player.x-4, 0, 8, player.y, ctx.color));
   }
 }
 
